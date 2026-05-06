@@ -38,6 +38,20 @@ claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
+### Codex CLI Marketplace
+
+```bash
+codex plugin marketplace add DollarDill/beads-superpowers
+codex plugin install beads-superpowers@beads-superpowers-marketplace
+```
+
+After installing, enable hooks in `~/.codex/config.toml`:
+
+```toml
+[features]
+codex_hooks = true
+```
+
 ### npx (Vercel Skills CLI)
 
 ```bash

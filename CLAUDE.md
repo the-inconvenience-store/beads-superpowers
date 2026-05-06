@@ -363,6 +363,11 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 # Option B: Claude Code Marketplace
 claude plugin marketplace add DollarDill/beads-superpowers
 claude plugin install beads-superpowers@beads-superpowers-marketplace
+
+# Option C: Codex CLI Marketplace
+codex plugin marketplace add DollarDill/beads-superpowers
+codex plugin install beads-superpowers@beads-superpowers-marketplace
+# Then enable hooks: add [features] codex_hooks = true to ~/.codex/config.toml
 ```
 
 ## Example Workflow
