@@ -100,9 +100,52 @@ assert_count_eq() {
     fi
 }
 
+# --- Tool hiding helpers (per-binary stub, not per-directory) ---
+# In Debian, curl/git/python3/tar all live in /usr/bin.
+# Removing /usr/bin from PATH would break everything.
+# Instead, prepend a directory of stub scripts that exit 127.
+ORIGINAL_PATH="$PATH"
+
+hide_tool() {
+  mkdir -p /tmp/path-overrides
+  for tool in "$@"; do
+    printf '#!/bin/sh\nexit 127\n' > "/tmp/path-overrides/$tool"
+    chmod +x "/tmp/path-overrides/$tool"
+  done
+  export PATH="/tmp/path-overrides:$PATH"
+}
+
+restore_tools() {
+  rm -rf /tmp/path-overrides
+  export PATH="$ORIGINAL_PATH"
+}
+
+assert_output_contains() {
+  local output="$1" pattern="$2" name="$3"
+  if echo "$output" | grep -q "$pattern"; then
+    echo "  [PASS] $name"; pass=$((pass + 1))
+  else
+    echo "  [FAIL] $name — pattern not found: $pattern"; fail=$((fail + 1))
+  fi
+}
+
+assert_no_skills_installed() {
+  local name="$1"
+  local count
+  count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$count" -eq 0 ]; then
+    echo "  [PASS] $name (0 skills)"; pass=$((pass + 1))
+  else
+    echo "  [FAIL] $name — found $count skill dirs"; fail=$((fail + 1))
+  fi
+}
+
 # --- Helper: start/stop local HTTP server ---
 start_http_server() {
     cp -f /src/release.tar.gz /tmp/release.tar.gz
+    if [ -f /src/checksums.txt ]; then
+      cp -f /src/checksums.txt /tmp/checksums.txt
+    fi
     cd /tmp && python3 -m http.server 8888 >/dev/null 2>&1 &
     HTTP_PID=$!
     sleep 1
@@ -251,6 +294,159 @@ if command -v opencode >/dev/null 2>&1; then
   assert_count_eq "$oc_remaining" 0 "OpenCode skills removed"
   assert_file_not_exists "$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts" "OpenCode plugin removed"
 fi
+
+# ============================================================
+echo "=== Group 4: Checksum Validation ==="
+# ============================================================
+
+# Clean state for checksum tests
+rm -rf "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+
+# 4a: Valid checksum passes
+start_http_server
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/checksums.txt" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1
+stop_http_server
+
+skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_gte "$skill_count" 22 "checksum: valid tarball installs"
+
+# Clean up for next checksum test
+bash /src/install.sh --uninstall 2>/dev/null || true
+rm -rf "$HOME/.claude/skills"
+
+# 4b: Corrupted tarball fails with checksum error
+cp -f /src/release.tar.gz /tmp/release.tar.gz
+# Corrupt the tarball — flip byte at offset 100
+printf '\xff' | dd of=/tmp/release.tar.gz bs=1 seek=100 count=1 conv=notrunc 2>/dev/null
+
+start_http_server
+output=$(BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/checksums.txt" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
+stop_http_server
+
+assert_output_contains "$output" "Checksum mismatch" "checksum: corrupted tarball rejected"
+
+# 4c: --skip-checksum bypasses verification (use valid tarball to verify end-to-end)
+rm -rf "$HOME/.claude/skills"
+cp -f /src/release.tar.gz /tmp/release.tar.gz
+if [ -f /src/checksums.txt ]; then cp -f /src/checksums.txt /tmp/checksums.txt; fi
+
+start_http_server
+output=$(BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/checksums.txt" \
+  bash /src/install.sh --yes --version "$VERSION" --skip-checksum 2>&1) || true
+stop_http_server
+
+assert_output_contains "$output" "skipped" "checksum: --skip-checksum message shown"
+skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_gte "$skill_count" 22 "checksum: --skip-checksum install succeeds"
+
+bash /src/install.sh --uninstall 2>/dev/null || true
+
+# 4d: Missing checksums.txt warns but proceeds
+rm -rf "$HOME/.claude/skills"
+cp -f /src/release.tar.gz /tmp/release.tar.gz
+rm -f /tmp/checksums.txt
+
+start_http_server
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+BEADS_SUPERPOWERS_CHECKSUMS_URL="http://localhost:8888/missing-checksums.txt" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1
+stop_http_server
+
+skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_gte "$skill_count" 22 "checksum: missing checksums.txt still installs"
+
+bash /src/install.sh --uninstall 2>/dev/null || true
+
+# ============================================================
+echo "=== Group 5: Fallback Chain ==="
+# ============================================================
+
+rm -rf "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+
+# 5a: Tarball tier (curl available, no plugin CLIs treated as non-functional)
+start_http_server
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1
+stop_http_server
+
+skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_gte "$skill_count" 22 "fallback: tarball tier installs skills"
+
+# Check version:tier format
+assert_file_exists "$HOME/.claude/skills/.beads-superpowers-version" "fallback: version file exists"
+assert_file_contains "$HOME/.claude/skills/.beads-superpowers-version" ":" "fallback: version file has tier separator"
+
+bash /src/install.sh --uninstall 2>/dev/null || true
+rm -rf "$HOME/.claude"
+
+# 5b: Git clone tier (hide curl from PATH)
+hide_tool curl wget
+output=$(bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
+restore_tools
+
+skill_count=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_gte "$skill_count" 22 "fallback: git clone tier installs skills"
+assert_file_contains "$HOME/.claude/skills/.beads-superpowers-version" "git" "fallback: version file shows git tier"
+
+bash /src/install.sh --uninstall 2>/dev/null || true
+rm -rf "$HOME/.claude"
+
+# 5c: All methods fail gracefully
+hide_tool claude codex npx curl wget git
+output=$(bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
+restore_tools
+
+assert_output_contains "$output" "All installation methods failed" "fallback: graceful failure message"
+assert_no_skills_installed "fallback: no partial state after failure"
+
+# ============================================================
+echo "=== Group 6: Atomic Rollback ==="
+# ============================================================
+
+rm -rf "$HOME/.claude" "$HOME/.codex" "$HOME/.config/opencode"
+
+# Make skills dir read-only to force promote_staging failure
+mkdir -p "$HOME/.claude/skills"
+chmod 444 "$HOME/.claude/skills"
+
+start_http_server
+output=$(BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1) || true
+stop_http_server
+
+# Restore permissions
+chmod 755 "$HOME/.claude/skills"
+
+# Should have no partial state
+remaining=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+assert_count_eq "$remaining" 0 "rollback: no partial skills after permission failure"
+
+# ============================================================
+echo "=== Group 7: bd Integration ==="
+# ============================================================
+
+rm -rf "$HOME/.claude"
+
+# Install first
+start_http_server
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+  bash /src/install.sh --yes --version "$VERSION" 2>&1
+stop_http_server
+
+# Test that session-start hook handles bd in PATH
+if command -v bd >/dev/null 2>&1; then
+  assert_command_output_valid_json "bash $HOME/.claude/hooks/beads-superpowers-session-start.sh" "bd: session-start with bd produces valid JSON"
+else
+  echo "  [SKIP] bd not in container — skipping bd integration"
+fi
+
+# Cleanup
+bash /src/install.sh --uninstall 2>/dev/null || true
 
 # ============================================================
 echo
