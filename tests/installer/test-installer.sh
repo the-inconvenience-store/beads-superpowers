@@ -153,6 +153,60 @@ assert_command_output_valid_json "bash $HOME/.claude/hooks/beads-superpowers-ses
 assert_command_output_valid_json "bash $HOME/.claude/hooks/beads-superpowers-reminder.sh" "reminder hook output valid JSON"
 
 # ============================================================
+echo "=== Group 1b: Multi-CLI Install Verification ==="
+# ============================================================
+
+# Check if Codex was detected during install
+if command -v codex >/dev/null 2>&1; then
+  echo "  [INFO] Codex CLI detected in container"
+
+  # Codex skills installed
+  codex_skill_count=$(find "$HOME/.codex/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  assert_count_gte "$codex_skill_count" 22 "Codex skill count >= 22"
+  assert_dir_exists "$HOME/.codex/skills/using-superpowers" "Codex skill: using-superpowers"
+  assert_file_exists "$HOME/.codex/skills/brainstorming/SKILL.md" "Codex skill has SKILL.md"
+else
+  echo "  [SKIP] Codex CLI not in container — skipping Codex assertions"
+fi
+
+# Check if OpenCode was detected during install
+if command -v opencode >/dev/null 2>&1; then
+  echo "  [INFO] OpenCode detected in container"
+
+  # OpenCode skills installed
+  oc_skill_count=$(find "$HOME/.config/opencode/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  assert_count_gte "$oc_skill_count" 22 "OpenCode skill count >= 22"
+  assert_dir_exists "$HOME/.config/opencode/skills/using-superpowers" "OpenCode skill: using-superpowers"
+
+  # OpenCode plugin installed
+  assert_file_exists "$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts" "OpenCode plugin installed"
+else
+  echo "  [SKIP] OpenCode not in container — skipping OpenCode assertions"
+fi
+
+# ============================================================
+echo "=== Group 1c: Hook Format Validation ==="
+# ============================================================
+
+# Test session-start with CLAUDE_PLUGIN_ROOT (existing behavior)
+assert_command_output_valid_json "CLAUDE_PLUGIN_ROOT=/src bash $HOME/.claude/hooks/beads-superpowers-session-start.sh" "session-start CC format valid JSON"
+
+# Test session-start with CODEX_PLUGIN_ROOT
+assert_command_output_valid_json "CODEX_PLUGIN_ROOT=/src bash $HOME/.claude/hooks/beads-superpowers-session-start.sh" "session-start Codex format valid JSON"
+
+# Test session-start generic (no env var)
+assert_command_output_valid_json "bash $HOME/.claude/hooks/beads-superpowers-session-start.sh" "session-start generic format valid JSON"
+
+# Test reminder with CLAUDE_PLUGIN_ROOT
+assert_command_output_valid_json "CLAUDE_PLUGIN_ROOT=/src bash $HOME/.claude/hooks/beads-superpowers-reminder.sh" "reminder CC format valid JSON"
+
+# Test reminder with CODEX_PLUGIN_ROOT
+assert_command_output_valid_json "CODEX_PLUGIN_ROOT=/src bash $HOME/.claude/hooks/beads-superpowers-reminder.sh" "reminder Codex format valid JSON"
+
+# Test reminder generic
+assert_command_output_valid_json "bash $HOME/.claude/hooks/beads-superpowers-reminder.sh" "reminder generic format valid JSON"
+
+# ============================================================
 echo "=== Group 2: Idempotent Re-Install ==="
 # ============================================================
 
@@ -185,6 +239,18 @@ assert_file_not_contains "$HOME/.claude/settings.json" "beads-superpowers" "sett
 # All skill directories should be gone
 remaining=$(find "$HOME/.claude/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
 assert_count_eq "$remaining" 0 "all skill dirs removed"
+
+# Multi-CLI uninstall verification
+if command -v codex >/dev/null 2>&1; then
+  codex_remaining=$(find "$HOME/.codex/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  assert_count_eq "$codex_remaining" 0 "Codex skills removed"
+fi
+
+if command -v opencode >/dev/null 2>&1; then
+  oc_remaining=$(find "$HOME/.config/opencode/skills" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  assert_count_eq "$oc_remaining" 0 "OpenCode skills removed"
+  assert_file_not_exists "$HOME/.config/opencode/plugins/beads-superpowers-plugin.ts" "OpenCode plugin removed"
+fi
 
 # ============================================================
 echo

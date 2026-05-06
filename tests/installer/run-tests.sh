@@ -50,7 +50,7 @@ info "Building local tarball..."
 tar czf "$tarball" \
     -C "$REPO_ROOT" \
     --transform "s,^,beads-superpowers-${version}/," \
-    skills/ hooks/ example-workflow/ .claude-plugin/ agents/
+    skills/ hooks/ example-workflow/ .claude-plugin/ .codex-plugin/ opencode/ agents/
 
 chmod 644 "$tarball"  # readable by container's non-root user
 info "Tarball: $(du -h "$tarball" | cut -f1)"
