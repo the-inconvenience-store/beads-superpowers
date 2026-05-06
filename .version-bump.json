@@ -11,6 +11,18 @@
     {
       "path": ".claude-plugin/marketplace.json",
       "key": "plugins[0].version"
+    },
+    {
+      "path": ".codex-plugin/plugin.json",
+      "key": "version"
+    },
+    {
+      "path": ".codex-plugin/marketplace.json",
+      "key": "plugins[0].version"
+    },
+    {
+      "path": "opencode/package.json",
+      "key": "version"
     }
   ],
   "audit": {
