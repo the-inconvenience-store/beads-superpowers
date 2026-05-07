@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- E2E container test for `install.sh` — Docker-based test runs install/re-install/uninstall in a clean debian:12-slim container with 24 assertions. Entry point: `./tests/installer/run-tests.sh`.
+- E2E container test for `install.sh` — Docker-based test runs install/re-install/uninstall in a clean debian:12-slim container with 48 assertions across 7 test groups. Entry point: `./tests/installer/run-tests.sh`.
 - `BEADS_SUPERPOWERS_TARBALL_URL` env var in `install.sh` — overrides the GitHub tarball download URL for local testing.
 - ADR-0004: E2E Container Testing for install.sh.
 - Dynamic per-page "last updated" dates via `mkdocs-git-revision-date-localized-plugin` — dates sourced from git commit history, no hardcoding.

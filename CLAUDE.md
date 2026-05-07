@@ -173,7 +173,7 @@ scripts/
   build-docs.sh            # Build MkDocs site
 skills/                    # 22 beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (6 suites)
-install.sh                 # curl installer (installs plugin + yegge agent globally)
+install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
 mkdocs.yml                 # MkDocs Material site config
 ```
 

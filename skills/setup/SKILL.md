@@ -98,7 +98,7 @@ for path in \
 done
 
 if [ -z "$SKILL_FILE" ]; then
-    printf '{"additionalContext": "beads-superpowers skills not found. Run: npm exec --yes -- skills@latest add DollarDill/beads-superpowers --all -y -g"}\n'
+    printf '{"additionalContext": "beads-superpowers skills not found. Run: npm exec --yes -- skills@latest add DollarDill/beads-superpowers -a claude-code -g --copy -y"}\n'
     exit 0
 fi
 
@@ -308,7 +308,7 @@ print('✓ Both hooks removed from settings.json')
 ## Integration
 
 **Called after:**
-- `npm exec --yes -- skills@latest add DollarDill/beads-superpowers --all -y -g`
+- `npx skills add DollarDill/beads-superpowers -a claude-code -g --copy -y`
 - Any npx/manual skills installation
 
 **Pairs with:**
