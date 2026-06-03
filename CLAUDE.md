@@ -86,7 +86,7 @@ A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://
 - `.claude-plugin/` — Claude Code plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Auto-discovered by Claude Code.
 - `.codex-plugin/` — Codex CLI plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Mirrors `.claude-plugin/` for Codex compatibility.
 - `skills/` — 22 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
-- `agents/` — `code-reviewer.md` agent. Auto-discovered. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
+- `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). In-process hooks for session start, prompt reminders, and compaction resilience. Distributed via `install.sh`.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
@@ -140,7 +140,7 @@ cp -rf source dest          # NOT: cp -r source dest
 .codex-plugin/
   plugin.json              # Codex CLI plugin manifest (mirrors .claude-plugin/)
   marketplace.json         # Codex CLI marketplace config
-agents/                    # Code reviewer agent (auto-discovered)
+agents/                    # Removed in v0.6.0 (code-reviewer consolidated to skill template)
 assets/                    # Banner SVG
 docs/                      # MkDocs source pages — website content ONLY
   index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
@@ -390,17 +390,17 @@ Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt t
 
 ## Syncing Source to Installed Plugin
 
-After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3/` goes stale.
+After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.6.0/` goes stale.
 
 **Recommended:** Symlink the cache to this repo (one-time, survives edits):
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.6.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.6.0
 ```
 
-**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.5.3/skills/`
+**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.6.0/skills/`
 
 **Note:** `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061) — use symlink instead.
 

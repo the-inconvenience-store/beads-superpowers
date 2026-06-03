@@ -188,13 +188,13 @@ Anti-sycophancy protocol. Requires technical evaluation of each suggestion rathe
 
 **Trigger:** Feature work needing isolation, or before executing plans.
 
-Creates and manages isolated git worktrees via `bd worktree`. Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5.
+Creates and manages isolated git worktrees via `bd worktree`. Pre-flight checks detect existing worktree isolation, submodule contexts, and prompt for consent (skipped when SDD-dispatched). Supports multiple concurrent worktrees for parallel subagent work — one per task, max 5. Use `bd -C .worktrees/<name>` for cross-worktree commands.
 
 ### finishing-a-development-branch
 
 **Trigger:** Implementation complete, tests pass, ready to integrate.
 
-Decision tree: merge locally, create PR, keep branch, or discard. Ends with the mandatory Land the Plane sequence: `bd close` → `bd dolt push` → `git push`.
+Detects environment (normal repo, named-branch worktree, or detached HEAD) and adapts options — 4 choices for normal/worktree, 3 for detached HEAD (no merge). Provenance-based cleanup only removes `.worktrees/` paths. Ends with the mandatory Land the Plane sequence: `bd close` → `bd dolt push` → `git push`.
 
 ### document-release
 
@@ -253,6 +253,9 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Add dependency | `bd dep add <child> <parent>` | SDD, writing-plans |
 | Store learning | `bd remember "insight"` | 17 of {{ skill_count }} skills prompt for this |
 | Attach evidence | `bd note <id> "context"` | verification |
+| Explain dependencies | `bd ready --explain` | systematic-debugging, executing-plans |
+| Atomic batch ops | `bd batch` (stdin) | SDD, executing-plans, finishing-branch |
+| Cross-worktree ops | `bd -C <path> <cmd>` | using-git-worktrees, SDD |
 | Sync to remote | `bd dolt push` | finishing-a-development-branch |
 
 ## How skills chain

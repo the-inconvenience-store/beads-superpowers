@@ -105,7 +105,7 @@ Every subagent result passes through the [review gate](#review-gate) before bein
 
 ### S10 — Close branch
 
-`finishing-a-development-branch` verifies tests pass, presents options (merge, PR, keep, discard), cleans up the worktree, and runs the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both `bd dolt push` and `git push` succeed.
+`finishing-a-development-branch` detects the environment (normal repo, named-branch worktree, or detached HEAD) and presents context-aware options — 4 choices for normal/worktree, 3 for detached HEAD (merge is unavailable). Provenance-based cleanup only removes worktrees inside `.worktrees/`. Ends with the Land the Plane protocol: close beads, push to remotes, verify clean state. Branch paths terminate here — work is not done until both `bd dolt push` and `git push` succeed.
 
 ### S11 — Session close
 
