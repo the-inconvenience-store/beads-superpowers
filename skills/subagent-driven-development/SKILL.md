@@ -273,6 +273,8 @@ You: I'm using Subagent-Driven Development to execute this plan.
 [  bd create "Task 2: Platform detection" -t task --parent <epic-id>]
 [  bd create "Task 3: Integration tests" -t task --parent <epic-id>]
 [Set dependencies: bd dep add <task-3-id> <task-1-id>]
+[  Tip: wire multiple deps atomically to avoid orphaned deps if one fails:]
+[  printf 'dep add <task-3-id> <task-1-id>\ndep add <task-3-id> <task-2-id>\n' | bd batch]
 
 Task 1: Hook installation script
 

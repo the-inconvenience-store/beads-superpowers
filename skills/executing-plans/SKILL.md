@@ -21,6 +21,12 @@ Load plan, review critically, execute all tasks, report when complete.
 3. If concerns: Raise them with your human partner before starting
 4. If no concerns: Create epic bead (`bd create "Epic: <plan-name>" -t epic`) and child beads for each task (`bd create "Task N: <title>" -t task --parent <epic-id>`), then proceed
 
+   > **Tip — atomic dependency wiring:** After creating task beads, wire dependency chains atomically using `bd batch` to prevent orphaned deps if one operation fails:
+   > ```bash
+   > printf 'dep add <task-2-id> <task-1-id>\ndep add <task-3-id> <task-2-id>\n' | bd batch
+   > ```
+   > Note: `bd batch create` does not support `--description`, `--parent`, or `--acceptance` flags. Use regular `bd create` for task creation.
+
 ### Step 2: Execute Tasks
 
 For each task:

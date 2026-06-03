@@ -245,7 +245,15 @@ Work is NOT complete until `git push` succeeds.
 ```bash
 # 1. Close completed task beads with reasons
 bd close <task-id-1> <task-id-2> ... --reason "Completed: description of what was done"
+```
 
+> **Tip — atomic batch close + follow-up creation:** If you need to close multiple tasks and create a follow-up bead in one atomic operation (all succeed or none do), use `bd batch`:
+> ```bash
+> printf 'close <task-id-1> Completed: description\nclose <task-id-2> Completed: description\ncreate task 2 Follow-up: remaining work\n' | bd batch
+> ```
+> Note: `bd batch create` is simplified — no `--description`, `--parent`, or `--acceptance` flags. Use regular `bd create` when those are needed.
+
+```bash
 # 2. Close the epic bead (if all child tasks are done)
 bd epic status <epic-id>                    # Summary view of completion
 bd epic close-eligible                      # Auto-close epics where all children are done
