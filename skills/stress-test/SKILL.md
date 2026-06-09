@@ -213,6 +213,8 @@ bd remember "design: <gap or insight revealed by stress testing>"
 | "This is a simple project" | Simple projects have the most unexamined assumptions |
 | "We already brainstormed this" | Brainstorming proposes; stress-testing challenges |
 | "I don't want to slow things down" | Catching a flaw now saves 10x the time later |
+| "They clicked Agree fast, so this is going well" | Speed ≠ depth — fast agreement might mean they're not reading your recommendation carefully. Don't reduce rigor. |
+| "I can shorten my recommendation since they just need to click" | The recommendation IS the value. AskUserQuestion replaces how the user responds, not how thoroughly you interrogate. |
 
 ## Red Flags
 
@@ -222,6 +224,7 @@ bd remember "design: <gap or insight revealed by stress testing>"
 - Ask multiple questions in one message
 - Forget to provide your own recommended answer
 - End without a findings summary
+- Present the `AskUserQuestion` without a substantive recommendation preceding it in the message body
 
 **Always:**
 - Provide a recommended answer for every question
