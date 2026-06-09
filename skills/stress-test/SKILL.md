@@ -191,8 +191,17 @@ After documenting findings, run a single self-critique pass. This is internal re
 
 ### Phase 5: Close
 
+**⚠️ Run the open command as a standalone Bash call** — never chain it after `bd` commands in the same invocation (e.g., `bd close <id> && open file.md`). The combination hangs.
+
 ```bash
 bd close <id> --reason "Stress-test complete: N branches resolved, M changes made, confidence: <level>"
+```
+
+If you discovered something reusable, capture it before closing:
+
+```bash
+# Only if worth preserving for future sessions:
+bd remember "design: <gap or insight revealed by stress testing>"
 ```
 
 ## Anti-Rationalization
@@ -220,13 +229,6 @@ bd close <id> --reason "Stress-test complete: N branches resolved, M changes mad
 - Track resolved vs unresolved branches
 - Produce a written findings summary
 - Create and close a bead with evidence
-
-If you discovered something reusable, capture it before closing:
-
-```bash
-# Only if worth preserving for future sessions:
-bd remember "design: <gap or insight revealed by stress testing>"
-```
 
 ## Integration
 
