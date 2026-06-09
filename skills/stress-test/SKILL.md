@@ -163,6 +163,32 @@ fi
 # If none available: just report the path
 ```
 
+### Phase 4.5: Reflexion Self-Review
+
+After documenting findings, run a single self-critique pass. This is internal reasoning — not shown to the user. Only the consequences (new or re-opened branches) are visible.
+
+**Self-critique questions:**
+
+1. **Coverage:** Compare branches mapped in Phase 2 against branches actually interrogated. List any that were skipped or merged, with justification.
+2. **Depth:** Did I challenge the design, or just confirm what was already there? Were my recommendations genuinely independent, or did I echo the existing approach? Did I accept any "it's fine" answers without specific reasoning?
+3. **Missed angles:** What failure modes, alternatives, or assumptions did I NOT explore?
+
+**Resolution:**
+
+- Coverage gaps (branches mapped but not interrogated) → go back and interrogate them
+- Depth issues (sycophantic agreement, rubber-stamping) → re-interrogate the weakest branches with harder questions
+- Missed angles (genuinely new branches) → add to the map and interrogate them
+
+**Visible consequence:** If reflexion adds or re-opens branches, emit an update via the branch tracking status line:
+
+```
+✓ Resolved: 7/7 branches (5 agreed, 2 modified)
+[Reflexion added 2 new branches]
+✓ Resolved: 9/9 branches (7 agreed, 2 modified)
+```
+
+**Termination rule:** Reflexion runs exactly once. One self-critique pass, address what it finds, then proceed to Phase 5. No recursive reflexion.
+
 ### Phase 5: Close
 
 ```bash
