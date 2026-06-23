@@ -26,9 +26,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - DCI-injected `$VISUAL`/`$EDITOR` preference in `stress-test` Mode B — same fallback chain as `brainstorming` and `writing-plans`.
 - Phase 1 restore point in `stress-test` — commits or stashes the target artifact before inline edits begin, preserving a clean rollback point.
 
+### Changed
+
+- `brainstorming` visual companion: adopted upstream superpowers v6.0.3's auth-hardened server. Every HTTP and WebSocket request now requires a per-session key (via `?key=` or an `HttpOnly; SameSite=Strict` cookie, constant-time compared); WebSocket upgrades also enforce an Origin check (anti-DNS-rebinding); the `/files/` server rejects symlinks, dotfiles, and path traversal; responses carry `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`; `stop-server.sh` verifies process ownership; idle timeout raised 30 min → 4 h. Rebranded the companion wordmark to `beads-superpowers` (text-only) and removed the third-party `primeradiant.com` logo fetch. Test suite made auth-aware and expanded (`server.test.js`, `auth.test.js`, `ws-protocol.test.js`, `windows-lifecycle.test.sh`).
+
 ### Removed
 
 - `bd preflight` references from `CLAUDE.md`, `finishing-a-development-branch`, `using-superpowers`, and `docs/tips.md` — command outputs beads-project-specific Go instructions, not applicable to this project.
+
+### Fixed
+
+- `systematic-debugging`: the extended-thinking keyword in the skill body was un-hyphenated (`Ultrathink`), which silently triggered extended thinking every time the skill loaded. Hyphenated to `Ultra-think` to match upstream superpowers v6.0.3.
 
 ## [0.6.0] - 2026-06-03
 
