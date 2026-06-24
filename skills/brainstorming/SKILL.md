@@ -22,7 +22,7 @@ Every project goes through this process. A todo list, a single-function utility,
 You MUST create a brainstorming session bead (`bd create "Brainstorming: <topic>" -t task`) and child beads for each checklist step below (`bd create "Step N: <title>" -t chore --parent <session-bead-id>`), then complete them in order:
 
 1. **Explore project context** — check files, docs, recent commits
-2. **Offer visual companion** (if topic will involve visual questions) — this is its own message, not combined with a clarifying question. See the Visual Companion section below.
+2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
 3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
@@ -37,8 +37,6 @@ You MUST create a brainstorming session bead (`bd create "Brainstorming: <topic>
 ```dot
 digraph brainstorming {
     "Explore project context" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message, no other content)" [shape=box];
     "Ask clarifying questions" [shape=box];
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
@@ -50,10 +48,7 @@ digraph brainstorming {
     "Invoke stress-test skill" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
-    "Explore project context" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message, no other content)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions" [label="no"];
-    "Offer Visual Companion\n(own message, no other content)" -> "Ask clarifying questions";
+    "Explore project context" -> "Ask clarifying questions";
     "Ask clarifying questions" -> "Propose 2-3 approaches";
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
@@ -222,12 +217,12 @@ If the user selects "Needs changes", make the requested changes and re-run the s
 
 A browser-based companion for showing mockups, diagrams, and visual options during brainstorming. Available as a tool — not a mode. Accepting the companion means it's available for questions that benefit from visual treatment; it does NOT mean every question goes through the browser.
 
-**Offering the companion:** When you anticipate that upcoming questions will involve visual content (mockups, layouts, diagrams), offer it once for consent using the `AskUserQuestion` tool. **This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content.
+**Offering the companion (just-in-time):** Do NOT offer it upfront. Wait until a question would genuinely be clearer shown than told — a real mockup / layout / diagram question, not merely a UI *topic*. The first time that happens, offer it then for consent using the `AskUserQuestion` tool. **This offer MUST be its own message.** Do not combine it with clarifying questions, context summaries, or any other content. If they decline, continue text-only and don't offer again unless they raise it.
 
 ```json
 {
   "questions": [{
-    "question": "Some upcoming questions might be easier to explain visually. I can show mockups, diagrams, and comparisons in a web browser as we go. This feature is still new and can be token-intensive. Want to try it? (Requires opening a local URL)",
+    "question": "This next part might be easier to show than describe. I can put together mockups, diagrams, and comparisons in a web browser as we go. This feature is still new and can be token-intensive. Want me to? (Requires opening a local URL)",
     "header": "Visual",
     "options": [
       {"label": "Yes, use visuals", "description": "Open a browser companion for mockups and diagrams during brainstorming"},
