@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - `brainstorming` visual companion: adopted upstream superpowers v6.0.3's auth-hardened server. Every HTTP and WebSocket request now requires a per-session key (via `?key=` or an `HttpOnly; SameSite=Strict` cookie, constant-time compared); WebSocket upgrades also enforce an Origin check (anti-DNS-rebinding); the `/files/` server rejects symlinks, dotfiles, and path traversal; responses carry `X-Frame-Options: DENY` and `Content-Security-Policy: frame-ancestors 'none'`; `stop-server.sh` verifies process ownership; idle timeout raised 30 min → 4 h. Rebranded the companion wordmark to `beads-superpowers` (text-only) and removed the third-party `primeradiant.com` logo fetch. Test suite made auth-aware and expanded (`server.test.js`, `auth.test.js`, `ws-protocol.test.js`, `windows-lifecycle.test.sh`).
+- `brainstorming` now offers the visual companion just-in-time instead of upfront (upstream superpowers v6.0.3) — it is no longer offered preemptively when a visual topic is anticipated; it's offered the first time a specific question would genuinely be clearer shown than told, and never offered if no visual question arises. The process-flow diagram drops the upfront "Visual questions ahead?" gate accordingly.
 
 ### Removed
 
