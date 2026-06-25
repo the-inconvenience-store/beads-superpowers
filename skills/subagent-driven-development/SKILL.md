@@ -418,7 +418,7 @@ Conversation memory does not survive compaction, and a controller that loses its
 - Dispatch parallel subagents WITHOUT per-task worktree isolation (each subagent MUST have its own `bd worktree`)
 - Dispatch more than 5 parallel subagents in a single batch (resource exhaustion)
 - Use Claude's `isolation: "worktree"` parameter instead of `bd worktree` (bypasses beads DB sharing)
-- Make subagent read plan file (provide full text instead)
+- Make subagent navigate the raw multi-task plan file (give it a focused, self-contained task brief instead — `scripts/task-brief` writes one, see File Handoffs)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
 - Accept "close enough" on spec compliance (task reviewer found issues = not done)
