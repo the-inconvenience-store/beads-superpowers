@@ -13,6 +13,59 @@
 
 A plugin for Claude Code, Codex, and OpenCode that makes your AI coding agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. 22 skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
+## How it works
+
+When you start a task, the agent runs **brainstorming** to nail down requirements before touching code, then **writing-plans** to break the work into `bd`-tracked steps that survive session restarts. During implementation it follows **test-driven-development** (failing test first, always) and can fan out to parallel subagents via **subagent-driven-development** — each agent working in its own git worktree. `bd` stores every task, decision, and note in a local Dolt database, so the agent picks up exactly where it left off next session without relying on chat history.
+
+## What's Inside
+
+### Testing
+
+| Skill | What it does |
+|-------|-------------|
+| `test-driven-development` | RED-GREEN-REFACTOR loop — Iron Law: no implementation without a failing test |
+| `verification-before-completion` | Evidence before claims — requires proof before marking anything done |
+
+### Debugging
+
+| Skill | What it does |
+|-------|-------------|
+| `systematic-debugging` | 4-phase root-cause analysis before proposing any fix |
+
+### Collaboration
+
+| Skill | What it does |
+|-------|-------------|
+| `requesting-code-review` | Dispatches a code-reviewer subagent with structured criteria |
+| `receiving-code-review` | Anti-sycophancy reception — evaluates each finding on its merits |
+| `subagent-driven-development` | Fresh agent per task with spec + quality review; parallel batch mode for independent tasks |
+| `dispatching-parallel-agents` | Fan-out to 2+ independent agents without shared state |
+
+### Project management
+
+| Skill | What it does |
+|-------|-------------|
+| `brainstorming` | Socratic design session before any code — produces a spec bead |
+| `stress-test` | Adversarial interrogation of plans with recommended answers |
+| `writing-plans` | Breaks work into bite-sized tasks, each tracked as a `bd` bead |
+| `executing-plans` | Batch plan execution in a single session |
+| `using-git-worktrees` | Isolated development branches per task |
+| `finishing-a-development-branch` | Merge/PR flow + Land the Plane (close beads, push) |
+| `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
+| `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
+| `getting-up-to-speed` | Session orientation — loads `bd` context and produces a current-state summary |
+| `research-driven-development` | Parallel research agents → synthesized knowledge-base document |
+| `write-documentation` | Human-quality prose — 14-rule writing system with context-first drafting |
+
+### Meta
+
+| Skill | What it does |
+|-------|-------------|
+| `using-superpowers` | Bootstrap — injected at session start, routes to the right skill |
+| `setup` | Post-install hook configuration (SessionStart + UserPromptSubmit) |
+| `writing-skills` | Meta-skill for creating or modifying skills in this plugin |
+| `auditing-upstream-drift` | Detects staleness vs upstream superpowers and beads releases |
+
 ## Install
 
 ### curl (recommended — works with all supported CLIs)
