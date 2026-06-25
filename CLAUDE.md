@@ -75,7 +75,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Project Overview
 
-A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.0.3) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.5). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
+A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.0.3) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.5). It gives AI coding agents 22 composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
 **Version:** 0.7.1
@@ -95,7 +95,7 @@ A plugin for Claude Code, Codex, and OpenCode that merges [Superpowers](https://
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 6 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
-- `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, and OpenCode CLIs.
+- `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Gemini, Copilot, Droid, Antigravity, Kimi, Pi).
 - `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
 
 ## Key Design Decisions
@@ -350,7 +350,7 @@ bash install.sh --test
 
 ## Version Management
 
-Version is declared in 6 files that must stay in sync:
+Version is declared in 9 files that must stay in sync:
 
 - `package.json`
 - `.claude-plugin/plugin.json`
@@ -358,6 +358,9 @@ Version is declared in 6 files that must stay in sync:
 - `.codex-plugin/plugin.json`
 - `.codex-plugin/marketplace.json`
 - `opencode/package.json`
+- `.cursor-plugin/plugin.json`
+- `gemini-extension.json`
+- `.kimi-plugin/plugin.json`
 
 Use `scripts/bump-version.sh` to update all at once:
 
