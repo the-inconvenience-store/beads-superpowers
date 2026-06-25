@@ -228,4 +228,4 @@ No performative agreement. Technical rigor always.
 
 **Pairs with:** **requesting-code-review** — request/response pair. That skill dispatches the reviewer; this skill handles the feedback.
 
-**Used by:** **subagent-driven-development** — review feedback loops during two-stage review gates.
+**Used by:** **subagent-driven-development** — review feedback loops during task review gates.

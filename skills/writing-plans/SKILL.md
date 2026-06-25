@@ -224,7 +224,7 @@ After the plan is approved, **use the `AskUserQuestion` tool** to offer the exec
     "options": [
       {
         "label": "Subagent-Driven (Recommended)",
-        "description": "Fresh subagent per task with two-stage review between tasks — fast iteration, high quality"
+        "description": "Fresh subagent per task with a single task review between tasks — fast iteration, high quality"
       },
       {
         "label": "Inline Execution",
@@ -238,7 +238,7 @@ After the plan is approved, **use the `AskUserQuestion` tool** to offer the exec
 
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:subagent-driven-development
-- Fresh subagent per task + two-stage review
+- Fresh subagent per task + single task review (spec + quality verdicts)
 
 **If Inline Execution chosen:**
 - **REQUIRED SUB-SKILL:** Use superpowers:executing-plans

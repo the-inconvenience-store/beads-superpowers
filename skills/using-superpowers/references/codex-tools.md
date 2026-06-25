@@ -34,7 +34,7 @@ from built-in roles (`default`, `explorer`, `worker`).
 When a skill says to dispatch an agent via a prompt template:
 
 1. Find the skill's prompt template file (e.g., `code-reviewer.md`,
-   `code-quality-reviewer-prompt.md`)
+   `task-reviewer-prompt.md`)
 2. Read the prompt content
 3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
 4. Spawn a `worker` agent with the filled content as the `message`

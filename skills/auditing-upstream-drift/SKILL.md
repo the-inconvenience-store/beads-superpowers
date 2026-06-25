@@ -201,11 +201,13 @@ echo "Beads command references in skills: $count (minimum: 30)"
 [ "$count" -ge 30 ] && echo "PASS" || echo "FAIL: insufficient beads integration"
 ```
 
-**Check 3.7 — Subagent prompts must NOT reference beads:**
+**Check 3.7 — Reviewer prompt must NOT reference beads:**
 ```bash
-# Orchestrator-only design: subagents don't touch beads
-for f in skills/subagent-driven-development/implementer-prompt.md skills/subagent-driven-development/spec-reviewer-prompt.md skills/subagent-driven-development/code-quality-reviewer-prompt.md; do
-    count=$(grep -c "bd create\|bd close\|bd update\|bd ready" "$f" 2>/dev/null || echo 0)
+# Orchestrator-only design: the reviewer subagent does not touch beads.
+# (implementer-prompt.md is the documented EXCEPTION — it IS beads-aware by
+#  design: it claims and closes its own task bead. Do not add it here.)
+for f in skills/subagent-driven-development/task-reviewer-prompt.md; do
+    count=$(grep -cE "bd create|bd close|bd update|bd ready" "$f" 2>/dev/null) || count=0
     [ "$count" -eq 0 ] && echo "PASS: $(basename $f) clean" || echo "FAIL: $(basename $f) has $count bd references"
 done
 ```
