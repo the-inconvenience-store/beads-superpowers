@@ -830,13 +830,13 @@ print_next_steps() {
     echo "    Plugin installed — skills and hooks are active automatically."
   fi
   echo
-  [ "$HAS_GEMINI" = 1 ]  && info "Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers"
-  [ "$HAS_COPILOT" = 1 ] && info "Copilot CLI detected — native install: copilot plugin marketplace add DollarDill/beads-superpowers && copilot plugin install beads-superpowers@beads-superpowers-marketplace"
-  [ "$HAS_CURSOR" = 1 ]  && info "Cursor detected — native install: /add-plugin beads-superpowers (in Cursor Agent)"
-  [ "$HAS_DROID" = 1 ]   && info "Factory Droid detected — native: droid plugin marketplace add https://github.com/DollarDill/beads-superpowers && droid plugin install beads-superpowers@beads-superpowers-marketplace"
-  [ "$HAS_AGY" = 1 ]     && info "Antigravity detected — native install: agy plugin install https://github.com/DollarDill/beads-superpowers"
-  [ "$HAS_KIMI" = 1 ]    && info "Kimi Code detected — native install: /plugins install https://github.com/DollarDill/beads-superpowers"
-  [ "$HAS_PI" = 1 ]      && info "Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers"
+  if [ "$HAS_GEMINI" = 1 ]; then info "Gemini CLI detected — native install: gemini extensions install https://github.com/DollarDill/beads-superpowers"; fi
+  if [ "$HAS_COPILOT" = 1 ]; then info "Copilot CLI detected — native install: copilot plugin marketplace add DollarDill/beads-superpowers && copilot plugin install beads-superpowers@beads-superpowers-marketplace"; fi
+  if [ "$HAS_CURSOR" = 1 ]; then info "Cursor detected — native install: /add-plugin beads-superpowers (in Cursor Agent)"; fi
+  if [ "$HAS_DROID" = 1 ]; then info "Factory Droid detected — native: droid plugin marketplace add https://github.com/DollarDill/beads-superpowers && droid plugin install beads-superpowers@beads-superpowers-marketplace"; fi
+  if [ "$HAS_AGY" = 1 ]; then info "Antigravity detected — native install: agy plugin install https://github.com/DollarDill/beads-superpowers"; fi
+  if [ "$HAS_KIMI" = 1 ]; then info "Kimi Code detected — native install: /plugins install https://github.com/DollarDill/beads-superpowers"; fi
+  if [ "$HAS_PI" = 1 ]; then info "Pi detected — native install: pi install git:github.com/DollarDill/beads-superpowers"; fi
 }
 
 # --- Uninstall ---
