@@ -22,8 +22,8 @@ This is the quality gate for the beads-superpowers plugin. It verifies everythin
 
 | Source | Repository | Our Baseline | What We Track |
 |--------|-----------|-------------|---------------|
-| **Superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | v5.1.0 | Skills content, new skills, hook structure, plugin manifest |
-| **Beads** | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.4 | CLI commands, new features, bd prime format, deprecations |
+| **Superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | v6.0.3 | Skills content, new skills, hook structure, plugin manifest |
+| **Beads** | [gastownhall/beads](https://github.com/gastownhall/beads) | v1.0.5 | CLI commands, new features, bd prime format, deprecations |
 
 ## The Audit Process
 
@@ -257,7 +257,7 @@ git clone --depth 1 https://github.com/obra/superpowers.git /tmp/superpowers-ups
 **Check 5.1 — Version gap:**
 ```bash
 upstream_ver=$(grep '"version"' /tmp/superpowers-upstream/package.json | grep -o '[0-9.]*')
-echo "Upstream: v$upstream_ver | Our baseline: v5.1.0"
+echo "Upstream: v$upstream_ver | Our baseline: v6.0.3"
 ```
 
 **Check 5.2 — New skills in upstream:**
@@ -316,7 +316,7 @@ Check if beads has new capabilities our skills should use.
 **Check 6.1 — Beads version:**
 ```bash
 bd version
-# Compare against our baseline (v1.0.4)
+# Compare against our baseline (v1.0.5)
 ```
 
 **Check 6.2 — New or changed bd commands:**
@@ -431,8 +431,8 @@ Write the report to `.internal/audits/YYYY-MM-DD-upstream-drift.md`:
 - Skill chain: PASS/FAIL
 
 ## Upstream Drift
-- Superpowers: vX.Y.Z (baseline v5.1.0) — N changes
-- Beads: vX.Y.Z (baseline v1.0.4) — N new features
+- Superpowers: vX.Y.Z (baseline v6.0.3) — N changes
+- Beads: vX.Y.Z (baseline v1.0.5) — N new features
 - New skills: N (action: copy/skip for each)
 - Changed skills: N (action: merge/conflict/skip for each)
 
