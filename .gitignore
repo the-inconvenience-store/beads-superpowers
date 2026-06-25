@@ -26,6 +26,7 @@ node_modules/
 
 # Worktrees (isolated development branches)
 .worktrees/
+.superpowers/
 
 # npx skills install artifacts (symlinks created by Vercel Skills CLI)
 .agents/
