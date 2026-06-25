@@ -126,7 +126,7 @@ graph TD
 
 **Step 2 — Research.** The `research-driven-development` skill dispatches two agents in parallel: a researcher investigates the problem domain while an `@explore` agent maps the affected code. Running both concurrently cuts research time roughly in half.
 
-**Step 3 — Knowledge capture.** Findings are written to a persistent document. Key learnings go into `bd remember` so they surface in future sessions.
+**Step 3 — Knowledge capture.** Findings are written to a persistent document; key learnings go into `bd remember` so they surface in future sessions.
 
 **Step 4 — Brainstorming.** The `brainstorming` skill walks through context, clarifying questions, 2–3 approaches with trade-offs, and a design spec committed to git. It ends by invoking `writing-plans` — not by jumping to code. The `stress-test` skill may fire here to interrogate the design adversarially.
 
@@ -146,7 +146,7 @@ graph TD
 
 ## Agent memory
 
-Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of {{ skill_count }} skills now prompt for `bd remember` at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.
+Because beads tracks every process step, the memory types agents need are populated as a side effect of following the workflow. 21 of the {{ skill_count }} skills now prompt for `bd remember` at their natural completion points — root causes after debugging, design decisions after brainstorming, review insights after code review — so memory capture happens within the skill workflow, not as a separate step.
 
 | Memory Type | Beads Feature | What it answers |
 |-------------|---------------|-----------------|
