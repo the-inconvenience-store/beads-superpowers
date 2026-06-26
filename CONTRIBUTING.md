@@ -44,7 +44,7 @@ bash install.sh --test
 - [ ] Lint passes: `npx markdownlint-cli2 "**/*.md"`
 - [ ] No TodoWrite references in skills
 - [ ] Anti-rationalization tables, Iron Laws, Red Flags untouched
-- [ ] Version bumped in all 6 manifests if metadata changed (`./scripts/bump-version.sh --check`)
+- [ ] Version bumped in all 9 manifests if metadata changed (`./scripts/bump-version.sh --check`)
 - [ ] `CHANGELOG.md` updated under `[Unreleased]`
 
 ## Security
