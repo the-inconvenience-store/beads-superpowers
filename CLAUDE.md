@@ -94,7 +94,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
-- `scripts/` — `bump-version.sh` (sync version across 6 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
+- `scripts/` — `bump-version.sh` (sync version across 9 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Gemini, Copilot, Droid, Antigravity, Kimi, Pi).
 - `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
 
