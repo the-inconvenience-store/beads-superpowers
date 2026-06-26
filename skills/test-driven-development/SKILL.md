@@ -36,6 +36,8 @@ NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST
 
 Write code before the test? Delete it. Start over.
 
+TDD's Iron Law is one instance of the Production-Grade Doctrine (see using-superpowers) — the no-shortcuts posture applied to tests.
+
 **No exceptions:**
 - Don't keep it as "reference"
 - Don't "adapt" it while writing tests

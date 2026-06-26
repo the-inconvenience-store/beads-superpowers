@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Production-Grade Doctrine.** Every session now carries a bright-line doctrine: treat every project as a production-facing system with real users, so the agent never takes shortcuts, silently descopes a requirement, or accepts a material-risk trade-off on its own judgment — and never accepts a security regression (a hard floor). Code review, the task reviewer, and the completion gate now block security regressions by rule. Stated once in `using-superpowers`, referenced across the judgment and gate skills. (ADR-0023)
+
 ### Changed
 
 - **Stress-test is now offered at every approval gate.** The `brainstorming` spec-review and `writing-plans` plan-review gates include an "Approved + stress-test" option (listed first, recommended), so the optional adversarial design review is surfaced every time — not only when a design was judged "complex." Choose it to run `stress-test` on the spec or plan before continuing; plain "Approved" skips it. (ADR-0020)
