@@ -67,6 +67,8 @@ The replacement works at two levels. Execution skills track plan tasks as beads.
 
 Subsequent changes went further:
 
+**Production-grade doctrine.** Every session now carries a standing instruction to treat the work as production-facing with real users, no matter how small the task looks — the rationalization that ships the worst defects is "it's just a script." On its own initiative the agent does not take shortcuts, quietly drop a requirement, or accept a consequential trade-off, and it never weakens or removes a security control. A warranted exception is surfaced for the user to decide; a security regression is refused outright. The rule lives once in `using-superpowers`, which the session-start hook injects in full every session, and the gate skills — brainstorming, stress-test, code review, and the completion check — reference it where those decisions actually get made.
+
 **Prompt template pattern.** Subagent definitions moved from standalone agent files into prompt templates owned by the skills that dispatch them (`implementer-prompt.md`, `researcher-prompt.md`). One source of truth per subagent role — no drift between the skill's expectations and the subagent's instructions.
 
 **Parallel batch mode.** When `bd ready --parent` returns multiple unblocked tasks, `subagent-driven-development` executes them concurrently (max 5 per batch), each in its own `bd worktree`.
