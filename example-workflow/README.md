@@ -53,7 +53,7 @@ The `CLAUDE.md` provides behavioral guardrails (Think Before Coding, Simplicity 
 ## Customization
 
 - **Add project context** — Edit CLAUDE.md to add your architecture overview, conventions, and gotchas after the behavioral guidelines
-- **Adjust models** — yegge uses `model: inherit` (your session model). The researcher prompt template defaults to the `researcher` subagent type.
+- **Adjust models** — yegge uses `model: inherit` (your session model). The researcher prompt template dispatches a `general-purpose` subagent, not the built-in `researcher` type, whose own system prompt would override the template.
 - **Add project rules** — The Karpathy section explicitly says "Merge with project-specific instructions as needed"
 
 ## Learn More
