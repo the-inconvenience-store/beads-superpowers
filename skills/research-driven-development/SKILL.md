@@ -45,20 +45,38 @@ This path is resolved dynamically when the skill loads. Priority chain:
 ## Pipeline
 
 ```
-Step 1: Create bead
+Step 0: Scope check (conditional)
+Step 1: Create bead + calibrate effort
 Step 2: Check existing knowledge
-Step 3: Dispatch parallel research agents
-Step 4: Synthesize findings
+Step 3: Decompose + dispatch parallel research agents
+Step 4: Synthesize + verify findings
+Step 4.5: Gap-closing round (if needed)
 Step 5: Write document
 Step 6: Close bead
 ```
 
-## Step 1: Create a Bead
+## Step 0: Scope Check (conditional)
+
+If the question is already specific, **skip this step**. Fire it **only when you cannot name the sources you'd search or the decision the answer informs** — e.g. "research databases" (too vague). Do NOT fire when scope is already present — e.g. "compare Postgres vs SQLite for our embedded Dolt use case".
+
+When it fires, ask 2–3 clarifying questions via `AskUserQuestion` (scope · use-case · the decision it informs), then weave the answers into the research question before Step 1. This is disambiguation, not a quality gate — mandatory scope-gating just duplicates what a capable model already does. The "When NOT to Use" list still applies.
+
+## Step 1: Create a Bead + Calibrate Effort
 
 ```bash
 bd create "Research: <topic>" -t task -p 2
 bd update <id> --claim
 ```
+
+**Calibrate effort — the query tier picks the agent count (this is the throttle, not a vibe):**
+
+| Tier | When | Agents | Searches |
+|------|------|--------|----------|
+| Simple fact-finding | one factual answer | 0–1 (no decomposition) | ~3–10 |
+| Comparison / decision | weigh 2+ options | 2–4 sub-questions, one agent each | ~10–15 each |
+| Complex / open-ended | broad or architectural | up to 5 sub-questions | as needed |
+
+**Hard ceiling: at most 5 parallel agents per round.** `@explore` (Step 3), when dispatched, counts as one of the 5. Scale effort to the question — do not over-dispatch.
 
 ## Step 2: Check Existing Knowledge
 
@@ -74,39 +92,40 @@ find "!`bash ${CLAUDE_SKILL_DIR}/resolve-output-dir.sh`" -name "*.md" -exec grep
 
 **If comprehensive coverage already exists:** Reference it, add any new findings as updates, and close the bead. Do not duplicate existing research.
 
-## Step 3: Dispatch Parallel Research Agents
+## Step 3: Decompose + Dispatch Parallel Research Agents
 
-Launch BOTH agents in a **single message with multiple Agent tool calls** so they run concurrently:
+**Decompose first** (skip for the Simple tier): break the topic into **3–6 complementary sub-questions** (for opinion/design topics, 2–3 perspectives) that collectively cover it. Assign **one researcher agent per sub-question** — never hand every agent the raw topic. Launch all agents in a **single message with multiple `Agent` tool calls** so they run concurrently. **Cap: 5 parallel agents (Step 1).**
 
-### Agent A: Researcher (web + documentation)
+### The delegation contract (every dispatch)
+
+Each agent's brief MUST state all four parts (Anthropic's delegation contract — vague briefs cause duplicated and missed work):
+
+1. **Objective** — the specific sub-question, not the whole topic.
+2. **Output format** — structured findings, and a **verbatim supporting quote for every load-bearing claim** (this is what lets Step 4 verify soundness without re-fetching).
+3. **Tools / sources** — which to prefer (official docs over blogs; LSP for code).
+4. **Boundaries** — what this agent owns vs. its neighbours, so sub-questions don't overlap.
+
+Add to every brief: **start wide, then narrow** — open with a SHORT broad query, see what's available, then narrow. Never lead with a long, hyper-specific query.
+
+### Agent A: Researchers (web + documentation)
 
 Dispatch via the `Agent` tool:
 
 1. `Read` the prompt template at `./researcher-prompt.md`
-2. Use its content as the `prompt` parameter
-3. Use `subagent_type: "general-purpose"` (do NOT use `"researcher"` — that is Claude Code's built-in researcher agent with its own system prompt, which overrides the prompt template)
+2. Use its content as the `prompt` parameter, appending the sub-question + the four contract parts above + bead context (bead ID, what decision this informs, prior knowledge from `bd memories`)
+3. Use `subagent_type: "general-purpose"` (do NOT use `"researcher"` — that built-in agent's system prompt overrides the template)
 
-The prompt template includes the full researcher workflow (knowledge base search → LSP navigation → web search → cross-reference → structured output). Append to the prompt:
-- The research question (one clear sentence)
-- Context (bead ID, what decision this informs, prior knowledge from `bd memories`)
+### Agent B: @explore (codebase) — one agent, conditional
 
-### Agent B: @explore (codebase)
+Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only when the topic has codebase relevance** ("how does X work *here*", "should we adopt Y"). It counts as one of the 5 and is **not decomposed** (it's already a broad codebase sweep), but gets the same 4-part contract:
 
-Dispatch via the `Agent` tool with `subagent_type: "Explore"`:
+> Objective: find existing implementations, patterns, config, tests, and docs related to [topic] in this repo. Output: what exists, where (`file:line`), and how it relates. Boundaries: codebase only — no web. Report concisely.
 
-> Search the codebase for any existing implementations, patterns, or references related to [topic]. Check:
-> 1. Existing code that does something similar
-> 2. Configuration or dependencies related to this
-> 3. Tests that exercise related functionality
-> 4. Documentation mentioning this topic
->
-> Report: what exists, where it is, and how it relates to [topic].
+### How many agents
 
-### If Only One Agent Applies
-
-- **Pure topic research** (no codebase relevance): Dispatch only the researcher
-- **Pure codebase question**: Dispatch only @explore
-- **Both relevant** (default): Dispatch both in parallel
+- **Topic touches our codebase** (common case): N web sub-question agents + **1 `@explore`**, total ≤ 5.
+- **Pure external topic**: skip `@explore`; all slots go to web sub-questions.
+- **Pure codebase question**: dispatch only `@explore`.
 
 ## Step 4: Synthesize Findings
 
