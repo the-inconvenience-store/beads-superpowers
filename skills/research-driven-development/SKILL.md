@@ -127,14 +127,20 @@ Dispatch **exactly one** `@explore` agent (`subagent_type: "Explore"`) **only wh
 - **Pure external topic**: skip `@explore`; all slots go to web sub-questions.
 - **Pure codebase question**: dispatch only `@explore`.
 
-## Step 4: Synthesize Findings
+## Step 4: Synthesize + Verify Findings
 
-After both agents return, the **orchestrator** (you) synthesizes:
+After the agents return, the **orchestrator** (you) synthesizes. The three review touches operate at distinct granularities — claim-level here, coverage-level in Step 4.5, document-level in the Step 5 checklist — and are not redundant.
 
-1. **Merge findings** — Combine web research with codebase findings
-2. **Resolve contradictions** — If agents disagree or sources conflict, determine which is authoritative
-3. **Identify gaps** — Note anything neither agent covered
-4. **Extract actionable items** — If research reveals work to do, note recommended beads
+1. **Merge findings** — combine the sub-question results + codebase findings; merge semantic duplicates.
+2. **Verify soundness (the one claim-verification pass)** — for each **load-bearing** claim, check it against the **verbatim quote** the agent returned and confirm the source *actually supports* it (entailment, not topical proximity). Drop or downgrade unsupported claims. Tag each load-bearing claim inline with its source (`[S1]`).
+3. **Assign confidence per finding** — **high** (multiple primary sources agree) / **medium** (secondary or split) / **low** (single source / blog / contested), with a one-line rationale.
+4. **Resolve contradictions, keep the verdict** — when sources conflict, determine which is authoritative and recommend. When the conflict is load-bearing, also record both positions in an optional **Disagreements** note — but never silently average, and never abdicate the call.
+5. **Identify gaps** — list load-bearing claims that rest on a single source or are unresolved (feeds Step 4.5).
+6. **Extract actionable items** — note recommended beads.
+
+## Step 4.5: Gap-Closing Round (if needed)
+
+If Step 4 surfaced load-bearing claims resting on a single source or unresolved, **dispatch one narrow follow-up round of 1–2 targeted agents** aimed only at those gaps (not a second full fan-out), then re-synthesize. **Cap: 1–2 rounds total.** Record each: `bd note <id> "reflection round N: chasing <gaps>"`. If no gaps, skip.
 
 ## Step 5: Write the Document
 
@@ -168,13 +174,13 @@ Filename: `YYYY-MM-DD-<topic-slug>.md`
 
 ### [Finding 1: Title]
 
-[Details with specific facts, numbers, commands, code examples. Be concrete — no vague claims.]
+> **Confidence:** high / medium / low — [one-line rationale]
+
+[Details with specific facts, numbers, commands. Tag each load-bearing claim with its source, e.g. `[S1]`. Be concrete — no vague claims.]
 
 ### [Finding 2: Title]
 
-[Details]
-
-### [Finding 3: Title]
+> **Confidence:** high / medium / low — [rationale]
 
 [Details]
 
@@ -185,6 +191,10 @@ Filename: `YYYY-MM-DD-<topic-slug>.md`
 | Criterion | Option A | Option B | Option C |
 |-----------|----------|----------|----------|
 | ... | ... | ... | ... |
+
+## Disagreements
+
+[Optional — omit if none. When sources conflict on a load-bearing point: both positions, who holds each, and our verdict + why.]
 
 ## Codebase Context
 
@@ -204,10 +214,14 @@ Filename: `YYYY-MM-DD-<topic-slug>.md`
 
 [Anything unresolved or needing further investigation]
 
+## Refuted / Discarded Claims
+
+[Optional — omit if none. Claims checked and dropped/downgraded during verification, with why. Surfaced for transparency.]
+
 ## Sources
 
-- [Source Title](URL) — [What was extracted and why it's authoritative]
-- [Source Title](URL) — [What was extracted]
+- [Source Title](URL) — Primary/Official | Secondary | Community — [date] — [what was extracted]
+- [Source Title](URL) — Primary/Official | Secondary | Community — [date] — [what was extracted]
 ```
 
 ### Quality Checklist
@@ -221,6 +235,14 @@ Before writing, verify your document passes these checks:
 - [ ] **Contradictions resolved** — if sources disagreed, which is right and why
 - [ ] **Codebase context included** — what exists now, not just what the web says
 - [ ] **Recommendations are actionable** — "do X" not "consider doing X"
+
+**Self-grade before closing** (if any axis fails, run one Step-4.5 round):
+
+- [ ] **Factual accuracy** — claims match their sources
+- [ ] **Citation soundness** — each load-bearing claim's source actually supports it (verified against the quote)
+- [ ] **Completeness** — every sub-question answered
+- [ ] **Source quality** — ≥1 primary/official source for each load-bearing claim
+- [ ] **Effort efficiency** — agent count matched the query tier (no over-dispatch)
 
 ## Step 6: Close the Bead
 
@@ -251,6 +273,10 @@ bd create "Follow-up: <title>" -t task -p <priority>
 | "I'll write the document later" | You won't. Write it now while the research is fresh. |
 | "One source is enough" | Cross-reference across 3+ independent sources. Single-source findings get flagged. |
 | "I'll skip the knowledge base check" | You might duplicate existing research. Always search first. |
+| "The first pass answered it" | First passes miss the non-obvious. Run the Step-4 gap check. |
+| "The source is about the right topic" | Topical ≠ supporting. Verify the quote actually states the claim. |
+| "I'll hand the agents the whole topic" | Decompose. Give each agent one bounded sub-question + the 4-part contract. |
+| "This needs 10 agents" | Cap at 5. Scale effort to the query tier. |
 
 ## Example
 
