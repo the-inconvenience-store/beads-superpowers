@@ -14,6 +14,7 @@ git switch -c feat/my-improvement
 - **Commits:** Conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`), small and focused
 - **Branches:** `feat/<name>` or `fix/<name>` off `main`
 - **Skills:** Markdown only. Don't soften bright-line rules, don't remove anti-rationalization tables or Iron Laws. See "Modifying Skills" in `CLAUDE.md`.
+- **Translations:** When you edit an English docs page or `README.md`, update its `.zh.md` / `README.zh-CN.md` sibling, or note the drift on the zh review bead. Untranslated/stale pages fall back to English silently.
 
 ## Making changes
 

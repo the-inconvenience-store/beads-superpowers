@@ -325,7 +325,7 @@ grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 bash hooks/session-start 2>&1 | python3 -m json.tool
 
 # Build docs site locally
-pip install mkdocs-material mkdocs-macros-plugin  # one-time
+pip install mkdocs-material mkdocs-macros-plugin mkdocs-static-i18n  # one-time
 mkdocs build --strict                              # build
 mkdocs serve                                       # preview at http://localhost:8000
 ```

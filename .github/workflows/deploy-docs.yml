@@ -18,11 +18,11 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Cairo (for social card generation)
-        run: sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev
+      - name: Install Cairo + CJK font (for social card generation, incl. Chinese)
+        run: sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev libz-dev fonts-noto-cjk
 
       - name: Install dependencies
-        run: pip install "mkdocs-material[imaging]" mkdocs-macros-plugin mkdocs-git-revision-date-localized-plugin mkdocs-panzoom-plugin
+        run: pip install "mkdocs-material[imaging]" mkdocs-macros-plugin mkdocs-git-revision-date-localized-plugin mkdocs-panzoom-plugin mkdocs-static-i18n
 
       - name: Build and deploy
         run: mkdocs gh-deploy --force
