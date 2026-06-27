@@ -94,17 +94,9 @@ Using a different agent? See [Installation](#installation) for native install on
 
 ## Prerequisites
 
-**`bd` must be installed before the plugin will work.** The plugin registers hooks that call `bd` on every session start; if `bd` isn't present, those hooks fail silently and you lose persistent memory.
+**Install `bd` before the plugin.** Its hooks call `bd` on every session start; without it they fail silently and you lose persistent memory. The Quickstart above uses Homebrew, or `npm install -g @beads/bd` on any platform. Verify with `bd version`.
 
-```bash
-brew install beads          # macOS / Linux
-# or
-npm install -g @beads/bd    # any platform
-```
-
-Verify with `bd version`. Then install the plugin (see below), then run `bd init` in each project.
-
-**Note:** Native plugin install (Tier 1) installs skills and hooks automatically. It does NOT run `bd init` — you must do that yourself per project.
+**Note:** Native plugin install (Tier 1) installs skills and hooks, but not `bd init` — run that yourself per project.
 
 ## Installation
 
@@ -155,7 +147,7 @@ Config validated; not E2E-tested by us. Use with that in mind.
 /add-plugin beads-superpowers
 ```
 
-Run this command inside Cursor Agent. Update via the Marketplace UI. Note: config validated by us; not E2E-tested.
+Run this command inside Cursor Agent. Update via the Marketplace UI.
 
 #### Gemini CLI
 
@@ -198,7 +190,7 @@ Run `/new` after install to start a fresh session with the plugin active.
 agy plugin install https://github.com/DollarDill/beads-superpowers
 ```
 
-Note: reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us.
+Note: reuses the Claude plugin manifest — the same mechanism upstream verified.
 
 #### Factory Droid
 
@@ -207,15 +199,13 @@ droid plugin marketplace add https://github.com/DollarDill/beads-superpowers
 droid plugin install beads-superpowers@beads-superpowers-marketplace
 ```
 
-Note: reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us.
+Note: reuses the Claude plugin manifest — the same mechanism upstream verified.
 
 #### Pi
 
 ```bash
 pi install git:github.com/DollarDill/beads-superpowers
 ```
-
-Note: config validated by us; not E2E-tested.
 
 #### Universal fallback (npx)
 
@@ -240,51 +230,6 @@ The script's role is broader than just copying files. Use it when you need any o
 - **CI environments** — use `--yes --skip-checksum` for unattended runs
 
 Supports: `--yes` (skip prompts), `--version X.Y.Z`, `--dry-run`, `--skip-checksum`, `--uninstall`.
-
-## First project setup
-
-Initialise beads in your project:
-
-```bash
-cd your-project
-bd init
-```
-
-## Updating
-
-**Claude Code:**
-
-```bash
-claude plugin marketplace update beads-superpowers-marketplace
-```
-
-**Codex CLI:**
-
-```bash
-codex plugin marketplace update beads-superpowers-marketplace
-```
-
-**Gemini CLI:**
-
-```bash
-gemini extensions update beads-superpowers
-```
-
-**Copilot CLI:**
-
-```bash
-copilot plugin update beads-superpowers
-```
-
-**OpenCode / scripted / npx:**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/install.sh | bash
-# or
-npx skills add DollarDill/beads-superpowers -g --copy -y
-```
-
-Re-running the installer or `npx skills add` overwrites the existing installation. No `bd init` needed — your existing `.beads/` database is untouched.
 
 ## Built on
 
