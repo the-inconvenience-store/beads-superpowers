@@ -101,7 +101,7 @@ Use the scripted install when you need any of:
 
 - **Beads/Dolt bootstrap** — auto-detects whether `bd` is installed and guides setup
 - **Hook registration** — writes SessionStart and UserPromptSubmit entries to `settings.json` (required when using npx or manual install paths)
-- **`yegge.md` orchestrator** — optionally installs the 11-state FSM agent globally
+- **`yegge.md` orchestrator** — optionally installs the orchestrator agent globally
 - **Version pinning** — `--version X.Y.Z` for reproducible CI installs
 - **CI environments** — use `--yes --skip-checksum` for unattended runs
 

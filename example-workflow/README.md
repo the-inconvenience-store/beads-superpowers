@@ -7,14 +7,13 @@ This directory contains a ready-to-use development workflow for projects using [
 | Layer | File | Purpose |
 |-------|------|---------|
 | Behavioral rules | `CLAUDE.md` | Karpathy's 4 principles + beads integration — loaded for all agents |
-| Orchestration | `agents/yegge.md` | Complete 11-state FSM development lifecycle — primary session agent |
+| Orchestration | `agents/yegge.md` | Lean router — triages requests and routes to skills; primary session agent |
 
 Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt templates** within their skills — no separate agent files needed; the skills own the prompts, keeping them in sync.
 
 ### Naming
 
 - **yegge** (orchestrator) — Named after Steve Yegge, creator of [Beads](https://github.com/gastownhall/beads)
-- **researcher** prompt — Named after Jesse Vincent, creator of [Superpowers](https://github.com/obra/superpowers)
 
 ## Quick Setup
 
@@ -29,24 +28,19 @@ cp example-workflow/CLAUDE.md /path/to/your-project/CLAUDE.md
 
 ## How It Works
 
-The `yegge` agent orchestrates an 11-state finite state machine:
+The `yegge` agent triages each request and routes it to the skills that own the work — it doesn't hard-code a state machine. For non-trivial work it runs the full flow, one skill per step:
 
 ```text
-S1:  SETUP         → Create and claim a bead
-S2:  RESEARCH      → @researcher + @explore in parallel
-S3:  KNOWLEDGE     → Synthesize findings → write to knowledge base
-S4:  BRAINSTORM    → Skill(brainstorming) → design doc + user approval
-S5:  DECIDE        → Write Architecture Decision Record
-S6:  PLAN          → Skill(writing-plans) → plan doc + user approval
-S7:  IMPLEMENT     → Skill(using-git-worktrees) + Skill(subagent-driven-development)
-S8:  VERIFY        → Skill(verification-before-completion) → fresh evidence
-S9:  DOCUMENT      → Skill(write-documentation) + Skill(document-release)
-S10: CLOSE BRANCH  → Skill(finishing-a-development-branch) → merge/PR
-S11: LAND THE PLANE → bd close + bd dolt push + git push
-
-Simple task shortcut:  S1 → S7 → S8 → S9 → S10 → S11
-Research query:        S1 → S2 → S3 → S11
+Research    → research-driven-development      (skip if already understood)
+Brainstorm  → brainstorming                    (spec + approval gate)
+Plan        → writing-plans                    (task plan + approval gate)
+Implement   → using-git-worktrees + test-driven-development / subagent-driven-development
+Verify      → verification-before-completion   (evidence before "done")
+Document    → document-release
+Finish      → finishing-a-development-branch   (owns Land-the-Plane)
 ```
+
+Trivial edits skip the heavyweight ceremony (worktree / doc audit / PR) but still require verification; quick questions are answered directly. See `agents/yegge.md` for the triage table and full skill index.
 
 The `CLAUDE.md` provides behavioral guardrails (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) plus beads integration context. `bd prime` injects dynamic beads state at session start.
 

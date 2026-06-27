@@ -89,7 +89,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). In-process hooks for session start, prompt reminders, and compaction resilience. Distributed via `install.sh`.
-- `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (11-state FSM orchestrator). `install.sh` copies `yegge.md` globally.
+- `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh` copies `yegge.md` globally.
 - `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
@@ -103,7 +103,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - **Skills are pure Markdown** — No executable code in skills. Claude Code auto-discovers `skills/*/SKILL.md`. Platform-agnostic by design. (See: upstream superpowers architecture)
 - **Prompt templates over standalone agent files** — Subagent prompts (`implementer-prompt.md`, `researcher-prompt.md`) live inside their skills. Only the orchestrator (`yegge.md`) is a standalone agent file. Prevents drift between skill and dispatch instructions. (See: ADR-0003)
 - **`bd` replaces TodoWrite everywhere** — Every `TodoWrite` reference in upstream superpowers replaced with `bd` commands. Beads provides persistent cross-session memory that TodoWrite lacks.
-- **Three-layer architecture for example workflow** — `CLAUDE.md` (behavioral principles + project context) + `agents/yegge.md` (FSM orchestration) + prompt templates (subagent dispatch). Each layer has a distinct responsibility. (See: ADR-0003)
+- **Three-layer architecture for example workflow** — `CLAUDE.md` (behavioral principles + project context) + `agents/yegge.md` (orchestration — triage + skill routing) + prompt templates (subagent dispatch). Each layer has a distinct responsibility. (See: ADR-0003, ADR-0032)
 - **MkDocs Material for docs site** — HashiCorp/Terraform-style sidebar, dark theme, Mermaid diagrams. Template variables via macros plugin avoid hardcoded counts. (See: ADR-0001)
 - **Per-task worktree isolation for parallel SDD** — Independent plan tasks execute in parallel (max 5), each in its own `bd worktree`. Prevents merge conflicts between concurrent subagents. (See: ADR-0002)
 
@@ -157,7 +157,7 @@ decisions/                 # Architecture Decision Records (gitignored, local-on
   testing.md               # Test infrastructure docs
 example-workflow/
   CLAUDE.md                # Karpathy behavioral principles + beads integration (generic project template)
-  agents/yegge.md          # Orchestrator agent — 11-state FSM lifecycle
+  agents/yegge.md          # Orchestrator agent — lean router (triage + skill routing)
 hooks/
   hooks.json               # Claude Code hook registration
   codex-hooks.json         # Codex CLI hook registration (refs same scripts)
@@ -398,7 +398,7 @@ The `example-workflow/` directory provides a ready-to-use development workflow:
 | File | Purpose |
 |------|---------|
 | `CLAUDE.md` | Karpathy's 4 behavioral principles + beads integration (generic template for any project) |
-| `agents/yegge.md` | Complete orchestrator agent — 11-state FSM, triage, planning, rules, session protocol. Named after Steve Yegge (beads creator). Installed globally by `install.sh`. |
+| `agents/yegge.md` | Orchestrator agent — lean router: triage table, full-flow routing, always-true rules, session protocol. Named after Steve Yegge (beads creator). Installed globally by `install.sh`. |
 
 Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt templates** within their skills — no standalone agent files. The `researcher-prompt.md` is named after Jesse Vincent (superpowers creator).
 
