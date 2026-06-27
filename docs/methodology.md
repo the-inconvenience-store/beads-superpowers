@@ -124,9 +124,9 @@ graph TD
 
 **Step 9 — Documentation.** `document-release` scans the diff against existing docs for stale references, missing entries, and outdated examples. When the audit flags sections needing major prose rewrites, `write-documentation` fires for those sections.
 
-**Step 10 — Close branch.** `finishing-a-development-branch` detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
+**Step 10 — Close branch.** `finishing-a-development-branch` detects the current environment — normal repository, named-branch worktree, or detached HEAD — and presents context-aware options: 4 choices for normal and worktree contexts, 3 for detached HEAD where merge is unavailable. Provenance-based cleanup only removes worktrees inside `.worktrees/`, leaving externally created worktrees alone. The skill ends with the Land the Plane protocol: if the session produced several new memories, offer a `memory-curator` pass before `bd dolt push`; then `bd close` → `bd dolt push` → `git push` → `git status`. Branch paths terminate here — work is not done until both task state and code reach the remote.
 
-**Step 11 — Session close.** Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, push to remotes, verify clean state. The next session runs `bd prime` to restore the full picture.
+**Step 11 — Session close.** Fires only on non-branch paths (research queries, quick tasks that didn't create a branch). Runs the same close ritual as Step 10's Land the Plane: close beads, offer a `memory-curator` pass if the session produced several new memories, push to remotes, verify clean state. The next session runs `bd prime` to restore the full picture.
 
 ## Agent memory
 
@@ -141,6 +141,8 @@ Because beads tracks every process step, the memory types agents need are popula
 | Episodic | `events` table | What happened and when? |
 | Semantic | `bd search`, `bd query` | Where's the related work? |
 | Prospective | `bd ready` | What should I do next? |
+
+The `memory-curator` skill consolidates, deduplicates, and prunes the memory store that `bd remember` builds up — offered at session-close when several new memories were captured, or on-demand anytime (ADR-0034).
 
 ## Research basis
 

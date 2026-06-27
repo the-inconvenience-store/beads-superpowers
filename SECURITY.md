@@ -7,7 +7,8 @@ latest released version.
 
 | Version | Supported |
 |---------|-----------|
-| 0.7.x   | ✅        |
+| 0.8.x   | ✅        |
+| 0.7.x   | ❌        |
 | 0.6.x   | ❌        |
 | < 0.6   | ❌        |
 

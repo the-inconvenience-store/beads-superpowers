@@ -93,7 +93,7 @@ Code runs in an isolated worktree under TDD (red-green-refactor). The orchestrat
 
 Before creating the worktree, the skill runs pre-flight checks: it confirms the agent isn't already inside a worktree or a submodule, and asks for consent when a human, rather than the SDD automation, kicked it off.
 
-When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and dependency chains are wired atomically with `bd batch` — if one dependency fails to register, the whole batch rolls back rather than leaving orphaned state.
+When several tasks are unblocked, **parallel batch mode** runs up to five concurrently, each in its own worktree; sequential mode runs one at a time when tasks depend on each other. Every subagent result passes through the [review gate](#review-gate) before it's accepted, and the initial epic, tasks, and dependency graph are created atomically with `bd create --graph` (ADR-0030); `bd batch` handles subsequent close, dep-add, and update operations.
 
 ### Verify
 
@@ -109,7 +109,7 @@ When several tasks are unblocked, **parallel batch mode** runs up to five concur
 
 ### Session close
 
-On non-branch paths — research queries, quick tasks that never created a branch — the same close ritual runs without the merge step: `bd close` → `bd dolt push` → `git push` → `git status`. The next session runs `bd prime` to restore the full picture.
+On non-branch paths — research queries, quick tasks that never created a branch — the same close ritual runs without the merge step: `bd close` → `bd dolt push` → `git push` → `git status`. If the session produced several new memories, the orchestrator offers a `memory-curator` pass before `bd dolt push`. The next session runs `bd prime` to restore the full picture.
 
 ## Review gate
 
@@ -156,4 +156,4 @@ Two interrupts can fire at any point. They suspend the current step, handle the 
 
 **Start:** The SessionStart hook fires automatically, injecting skill context and running `bd prime`. That surfaces unblocked beads, in-progress work from previous sessions, and persistent memories. Orient before claiming; claim before implementing.
 
-**End:** Finish for code paths, Session close for non-branch paths. Close every bead with evidence, push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed — the push is what completion means.
+**End:** Finish for code paths, Session close for non-branch paths. Close every bead with evidence; if the session produced several new memories, offer a `memory-curator` pass before the push. Push the beads remote, push git, verify a clean tree. A session with uncommitted work or unpushed commits hasn't landed — the push is what completion means.

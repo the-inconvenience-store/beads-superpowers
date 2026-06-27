@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.7.2-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.8.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml"><img alt="Release" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml/badge.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
@@ -58,6 +58,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | `document-release` | Post-ship doc audit — keeps README, CHANGELOG, and ARCHITECTURE in sync |
 | `project-init` | Beads/Dolt DB setup, bootstrap, and recovery |
 | `getting-up-to-speed` | Session orientation — loads `bd` context and produces a current-state summary |
+| `memory-curator` | Session-close/on-demand memory consolidation — deduplicates and prunes the `bd` memory store (ADR-0034) |
 | `research-driven-development` | Parallel research agents → synthesized knowledge-base document |
 | `write-documentation` | Human-quality prose — 14-rule writing system with context-first drafting |
 

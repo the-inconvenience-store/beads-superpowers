@@ -78,25 +78,25 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harnesses — Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.0.3) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.0.5). It gives AI coding agents 23 composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/DollarDill/beads-superpowers>
-**Version:** 0.7.2
+**Version:** 0.8.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Architecture
 
 - `.claude-plugin/` — Claude Code plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Auto-discovered by Claude Code.
 - `.codex-plugin/` — Codex CLI plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Mirrors `.claude-plugin/` for Codex compatibility.
-- `skills/` — 22 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
+- `skills/` — 23 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). In-process hooks for session start, prompt reminders, and compaction resilience. Distributed via `install.sh`.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh` copies `yegge.md` globally.
-- `docs/` — MkDocs Material source pages (6 pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
+- `docs/` — MkDocs Material source pages (6 EN + 6 ZH pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
-- `scripts/` — `bump-version.sh` (sync version across 9 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`.
+- `scripts/` — `bump-version.sh` (sync version across 9 files), `sync-skill-count.sh` (sync skill counts across all files), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`.
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Gemini, Copilot, Droid, Antigravity, Kimi, Pi).
-- `mkdocs.yml` + `main.py` — MkDocs Material site config and macros plugin.
+- `mkdocs.yml` + `main.py` + `mkdocs_hooks.py` — MkDocs Material site config, macros plugin, and i18n language-switcher hook.
 
 ## Key Design Decisions
 
@@ -144,6 +144,7 @@ agents/                    # Removed in v0.6.0 (code-reviewer consolidated to sk
 assets/                    # Banner SVG
 docs/                      # MkDocs source pages — website content ONLY
   index.md, getting-started.md, methodology.md, skills.md, workflow.md, tips.md
+  index.zh.md, getting-started.zh.md, methodology.zh.md, skills.zh.md, workflow.zh.md, tips.zh.md
   assets/                  # Banner SVG
 decisions/                 # Architecture Decision Records (gitignored, local-only)
 .internal/                 # Working docs (gitignored)
@@ -171,10 +172,13 @@ scripts/
   bump-version.sh          # Sync version across package.json + plugin manifests
   sync-skill-count.sh      # Sync skill counts across all files (idempotent)
   build-docs.sh            # Build MkDocs site
+  check-agent-bead-stamp.sh  # Verify agent-filed bead discipline convention
+  check-zh-docs.sh           # Verify zh docs structure/term parity
 skills/                    # 23 beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (6 suites)
 install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
 mkdocs.yml                 # MkDocs Material site config
+mkdocs_hooks.py            # i18n language-switcher hook
 ```
 
 **Important:** Claude Code auto-discovers `skills/`, `agents/`, and `hooks/` directories by convention. Do NOT declare these paths in `plugin.json` — it causes validation failures.
@@ -320,6 +324,9 @@ bash scripts/check-todowrite.sh
 # Verify agent-filed bead discipline convention present at all required sites
 bash scripts/check-agent-bead-stamp.sh
 
+# Verify zh docs structure/term parity
+bash scripts/check-zh-docs.sh
+
 # Verify beads integration (should be 30+)
 grep -r "bd create\|bd close\|bd ready" skills/ | wc -l
 
@@ -406,17 +413,17 @@ Subagents (researcher, implementer, code-reviewer) are dispatched via **prompt t
 
 ## Syncing Source to Installed Plugin
 
-After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.2/` goes stale.
+After modifying skills, the installed plugin cache at `~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0/` goes stale.
 
 **Recommended:** Symlink the cache to this repo (one-time, survives edits):
 
 ```bash
-rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.2
+rm -rf ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
 ln -s ~/workplace/beads-superpowers \
-  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.2
+  ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0
 ```
 
-**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.7.2/skills/`
+**Quick check for drift:** `diff -rq skills/ ~/.claude/plugins/cache/beads-superpowers-marketplace/beads-superpowers/0.8.0/skills/`
 
 **Note:** `claude plugin update` has a [cache bug](https://github.com/anthropics/claude-code/issues/14061) — use symlink instead.
 

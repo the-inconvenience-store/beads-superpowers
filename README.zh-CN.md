@@ -6,14 +6,14 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.7.2-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.8.0-4f46e5.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml"><img alt="Release" src="https://github.com/DollarDill/beads-superpowers/actions/workflows/release.yml/badge.svg"></a>
   <a href="https://github.com/DollarDill/beads-superpowers/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/DollarDill/beads-superpowers?style=social"></a>
 </p>
 
 ---
 
-一款适用于 Claude Code、Codex、OpenCode 及另外 7 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。22 项技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
+一款适用于 Claude Code、Codex、OpenCode 及另外 7 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。23 项技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
 
 ## 工作原理
 
@@ -64,6 +64,7 @@
 | `getting-up-to-speed` | 会话定向——加载 `bd` 上下文并生成当前状态摘要 |
 | `research-driven-development` | 并行研究智能体 → 综合知识库文档 |
 | `write-documentation` | 人类品质的文档——14 条规则写作体系，以上下文优先起草 |
+| `memory-curator` | 会话结束/按需的记忆整合——对 `bd` 记忆库去重并清理过时记忆（ADR-0034） |
 
 ### 元技能
 

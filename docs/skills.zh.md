@@ -28,6 +28,7 @@ UserPromptSubmit 钩子在每条消息时提醒智能体哪个技能适用于哪
 | 收到审查反馈 | `receiving-code-review` |
 | 编写面向用户的文本 | `write-documentation` |
 | 分支完成 | `finishing-a-development-branch` |
+| 整合或去重记忆 | `memory-curator` |
 
 其他可用技能：`document-release`、`getting-up-to-speed`、`dispatching-parallel-agents`、`project-init`、`setup`、`writing-skills`、`auditing-upstream-drift`
 
@@ -41,7 +42,7 @@ UserPromptSubmit 钩子在每条消息时提醒智能体哪个技能适用于哪
 | **质量** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **审查** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **基础设施** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **生命周期** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift) |
+| **生命周期** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator) |
 | **设置** | [setup](#setup), [project-init](#project-init) |
 | **研究** | [research-driven-development](#research-driven-development) |
 | **写作** | [write-documentation](#write-documentation) |
@@ -85,6 +86,7 @@ graph TD
     DR["document-release"]
     GUS["getting-up-to-speed"]
     AUD["auditing-drift"]
+    MC["memory-curator"]
   end
   subgraph Setup
     SET["setup"]
@@ -220,6 +222,12 @@ graph TD
 **触发条件：** 插件发布前，或检查过时情况时。
 
 对照 [obra/superpowers](https://github.com/obra/superpowers) 和 [gastownhall/beads](https://github.com/gastownhall/beads) 进行审计，检查需要移植的新技能、已变更的命令和文档改进。
+
+### memory-curator
+
+**触发时机：** 会话结束时已捕获多条新记忆，或按需进行全量整理。
+
+将会话中原始的 `bd remember` 笔记，通过会话内智能体转化为结构良好、去重整合后的记忆——无需运行时环境、密钥或嵌入向量。其范围刻意以证据为导向（ADR-0034）：质量把关的捕获、反思式整合与修剪，而非追求结构丰富性。它绝不会静默修改记忆库——它会提出一份经过审查的命令列表，由你确认后才写入。
 
 ### setup
 

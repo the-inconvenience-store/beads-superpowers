@@ -1,5 +1,5 @@
 ---
-description: Complete reference for 22 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.
+description: Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.
 ---
 
 # Skills Reference
@@ -258,6 +258,7 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 |---|---|---|
 | Create epic | `bd create "Epic: name" -t epic` | SDD, executing-plans |
 | Create task | `bd create "Task: name" -t task --parent <epic>` | SDD, executing-plans |
+| Atomic plan creation | `bd create --graph plan.json [--dry-run]` | writing-plans, SDD |
 | Quick capture | `bd q "title"` | any skill |
 | Claim work | `bd update <id> --claim` | executing-plans |
 | Complete work | `bd close <id> --reason "why"` | all execution skills |

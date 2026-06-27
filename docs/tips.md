@@ -25,6 +25,7 @@ description: Quick-reference bd command cheat sheet, skill routing table, troubl
 |---------|------|
 | `bd create "Epic: name" -t epic -p 2` | New epic at priority 2 |
 | `bd create "Task: title" -t task --parent <epic>` | Task under an epic |
+| `bd create --graph plan.json` | Atomic epic + tasks + deps (dry-run first) |
 | `bd q "quick title"` | Quick capture |
 
 ### Working
@@ -91,6 +92,7 @@ description: Quick-reference bd command cheat sheet, skill routing table, troubl
 | Update docs after shipping | `document-release` |
 | Research a topic | `research-driven-development` |
 | Write human-facing prose | `write-documentation` |
+| Consolidate or dedup memories | `memory-curator` |
 
 The `using-superpowers` bootstrap skill (auto-loaded at session start) has the full routing logic; if unsure, ask Claude to read it.
 
