@@ -57,6 +57,15 @@ Group failures by what's broken:
 
 Each domain is independent - fixing tool approval doesn't affect abort tests.
 
+### Before you fan out (orchestrator-only)
+
+Worktrees isolate *files*, not *assumptions* — parallel agents on different files can still diverge on an un-prescribed shared decision (MAST FC2). Before dispatching:
+
+1. **Front-load shared decisions** — list every decision ≥2 agents depend on (schemas, naming, interfaces, conventions); decide each once and write it verbatim into *every* agent prompt.
+2. **Share full context, not summaries** — give each agent the relevant traces/facts, not a lossy digest.
+
+This is orchestrator discipline applied before dispatch; do not ask subagents to coordinate with each other.
+
 ### 2. Create Focused Agent Tasks
 
 Each agent gets:

@@ -100,6 +100,15 @@ When `bd ready --parent <epic-id>` returns multiple unblocked tasks, those tasks
 
 **Parallel cap:** Maximum 5 subagents per batch. If more tasks are unblocked, split into batches of 5.
 
+### Before you fan out (orchestrator-only)
+
+Worktrees isolate *files*, not *assumptions* — parallel agents on different files can still diverge on an un-prescribed shared decision (MAST FC2). Before dispatching:
+
+1. **Front-load shared decisions** — list every decision ≥2 agents depend on (schemas, naming, interfaces, conventions); decide each once and write it verbatim into *every* agent prompt.
+2. **Share full context, not summaries** — give each agent the relevant traces/facts, not a lossy digest.
+
+This is orchestrator discipline applied before dispatch; do not ask subagents to coordinate with each other.
+
 ### Batch Execution Flow
 
 ```dot
