@@ -78,17 +78,16 @@ You: [Fix progress indicators]
 **Used by:**
 - **subagent-driven-development** — review after EACH task; catch issues before they compound; fix before moving to next task
 - **executing-plans** — review after each task or at natural checkpoints
-- **orchestrator (S7 review gate)** — ad-hoc review before merge or when stuck
+- **Ad-hoc review** — before merge or when stuck
 
 **Pairs with:**
 - **receiving-code-review** — request/response pair; this skill dispatches the reviewer, receiving-code-review handles the feedback
 - **verification-before-completion** — code review is pre-completion evidence
 
-If you discovered something reusable, capture it before closing:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-# Only if worth preserving for future sessions:
-bd remember "pattern: <code quality pattern discovered>"
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
 
 ## Red Flags
