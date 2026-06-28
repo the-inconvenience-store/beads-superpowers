@@ -177,7 +177,7 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the `beads-superpowers:test-driven-development` skill for writing proper failing tests
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -213,15 +213,25 @@ You MUST complete each phase before proceeding to the next.
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
-**Capture what you learned** before closing:
+After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
 
-```bash
-bd remember "root cause: <problem> — <cause> because <reason>"
+```json
+{
+  "questions": [{
+    "question": "This produced something worth preserving — what should I capture?",
+    "header": "Capture",
+    "options": [
+      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
+      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
+      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
+      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
+    ],
+    "multiSelect": false
+  }]
+}
 ```
 
-If a previous memory is now wrong, `bd forget <id>` first.
-
-**Capturing decisions:** if the fix is an architecturally-significant pivot (a hard-to-reverse approach chosen over a real alternative — e.g. questioning the architecture above), offer an ADR per **Capturing Decisions** (`using-superpowers`) — only when the 3-gate holds. Most bug fixes are not ADR-worthy.
+Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
 
 ## Red Flags - STOP and Follow Process
 
@@ -296,8 +306,8 @@ These techniques are part of systematic debugging and available in this director
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+- **beads-superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
+- **beads-superpowers:verification-before-completion** - Verify fix worked before claiming success
 
 ## Real-World Impact
 
