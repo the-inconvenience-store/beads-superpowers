@@ -17,7 +17,7 @@ NEVER run bd init --force (deprecated in v1.0.4). Use the named-intent alternati
 
 **Why:** Issue #2363 documents an AI agent that destroyed 247 issues via `bd init --force` cascade. The root cause was misdiagnosing "server can't connect" as "database missing". `bd init --force` is a nuclear option that should ONLY be run by a human who explicitly types it.
 
-This Iron Law is the Production-Grade Doctrine (see using-superpowers) applied to your data ledger: never take the shortcut that accepts catastrophic, irreversible risk.
+This Iron Law is the Production-Grade Doctrine applied to your data ledger: never take the shortcut that accepts catastrophic, irreversible risk.
 
 | Action | Safe? | Use When |
 |--------|-------|----------|
@@ -268,11 +268,10 @@ These lessons come from real recovery scenarios, not theory.
 
 **Resolution:** This warning is harmless. The export still succeeds (file is written), only the `git add` step fails. No action needed.
 
-If you discovered something reusable, capture it before closing:
+**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 
 ```bash
-# Only if worth preserving for future sessions:
-bd remember "project-init: <setup pattern or recovery step>"
+bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
 ```
 
 ## Integration
