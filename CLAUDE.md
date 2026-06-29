@@ -83,7 +83,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 
 - `.claude-plugin/` — Claude Code plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Auto-discovered by Claude Code.
 - `.codex-plugin/` — Codex CLI plugin manifest (`plugin.json`) and marketplace config (`marketplace.json`). Mirrors `.claude-plugin/` for Codex compatibility.
-- `skills/` — 23 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
+- `skills/` — 24 skills, each in `skills/<name>/SKILL.md`. Some include prompt templates (`implementer-prompt.md`, `researcher-prompt.md`) or helper scripts. Auto-discovered by Claude Code — do NOT declare in `plugin.json`.
 - `agents/` — Removed in v0.6.0. Code-reviewer is now dispatched via `skills/requesting-code-review/code-reviewer.md` prompt template. Subagents (implementer, researcher) use prompt templates inside their skills, not standalone agent files.
 - `hooks/` — `session-start` (injects `using-superpowers` + `bd prime`) and `superpowers-reminder.sh` (UserPromptSubmit skill trigger reminders). Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `opencode/` — Native OpenCode TypeScript plugin (`beads-superpowers-plugin.ts`). In-process hooks for session start, prompt reminders, and compaction resilience. Distributed via `install.sh`.
@@ -250,6 +250,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | research-driven-development    | Parallel research agents → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |
 | write-documentation            | Human-quality prose for all human-facing text — 14-rule writing system with context-first drafting and required checks      |
 | memory-curator                 | Session-close/on-demand memory consolidation — quality-gated extract, dedup, consolidate, prune (evidence-led)              |
+| session-handoff                | **Human-invoked only** — grounded session-handoff doc + continuation memory (not agent-routed)            |
 
 ## Modifying Skills
 

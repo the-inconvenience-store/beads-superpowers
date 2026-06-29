@@ -1,5 +1,5 @@
 ---
-description: Complete reference for 23 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.
+description: Complete reference for 24 composable skills with trigger map, category breakdown, bd command usage, and chaining diagrams showing how skills invoke each other.
 ---
 
 # Skills Reference
@@ -26,6 +26,7 @@ The UserPromptSubmit hook reminds the agent on every message which skill applies
 | Writing human-facing prose | `write-documentation` |
 | Branch complete | `finishing-a-development-branch` |
 | Consolidate or dedup memories | `memory-curator` |
+| Hand work to the next session | `session-handoff` (human-invoked) |
 
 Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `setup`, `writing-skills`, `auditing-upstream-drift`
 
@@ -39,7 +40,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Quality** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **Review** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **Infrastructure** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator) |
+| **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
 | **Setup** | [setup](#setup), [project-init](#project-init) |
 | **Research** | [research-driven-development](#research-driven-development) |
 | **Writing** | [write-documentation](#write-documentation) |
@@ -249,6 +250,10 @@ Decomposes the topic into sub-questions, dispatches one researcher per sub-quest
 **Trigger:** Writing or rewriting human-facing prose — docs, guides, emails, PR descriptions, release notes.
 
 14-rule writing system adapted from [WRITING.md](https://github.com/Anbeeld/WRITING.md). Context-first drafting, required checks as revision pass, targets the patterns that make LLM prose recognizable (regularity, catalog prose, false crispness). Pairs with `document-release` (which handles *when* to update, not *how* to write).
+
+### session-handoff
+
+**Human-invoked only.** Writes a grounded session-handoff document and stores a `bd remember` continuation note so the next session can pick up in-progress work without relying on chat history.
 
 ## Beads commands
 

@@ -29,6 +29,7 @@ UserPromptSubmit 钩子在每条消息时提醒智能体哪个技能适用于哪
 | 编写面向用户的文本 | `write-documentation` |
 | 分支完成 | `finishing-a-development-branch` |
 | 整合或去重记忆 | `memory-curator` |
+| 将工作移交至下一会话 | `session-handoff`（人工调用） |
 
 其他可用技能：`document-release`、`getting-up-to-speed`、`dispatching-parallel-agents`、`project-init`、`setup`、`writing-skills`、`auditing-upstream-drift`
 
@@ -42,7 +43,7 @@ UserPromptSubmit 钩子在每条消息时提醒智能体哪个技能适用于哪
 | **质量** | [test-driven-development](#test-driven-development), [systematic-debugging](#systematic-debugging), [verification-before-completion](#verification-before-completion) |
 | **审查** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **基础设施** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
-| **生命周期** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator) |
+| **生命周期** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
 | **设置** | [setup](#setup), [project-init](#project-init) |
 | **研究** | [research-driven-development](#research-driven-development) |
 | **写作** | [write-documentation](#write-documentation) |
@@ -252,6 +253,10 @@ graph TD
 **触发条件：** 编写或改写面向用户的文本——文档、指南、电子邮件、PR 描述、发布说明。
 
 改编自 [WRITING.md](https://github.com/Anbeeld/WRITING.md) 的 14 条写作规则体系。以上下文优先起草，将必要检查作为修订轮次，针对使 LLM 文本易于识别的模式（规律性、目录式文本、虚假简洁）。与 `document-release` 配合使用（后者处理*何时*更新，而非*如何*写作）。
+
+### session-handoff
+
+**仅限人工调用。** 生成一份基于实证的交接文档，并存储 `bd remember` 续接记忆，使下一会话无需依赖聊天记录即可接续进行中的工作。
 
 ## Beads 命令
 
