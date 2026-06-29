@@ -15,7 +15,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Precise total-count regex: a number + optional count-qualifier adjective + "skills", or "Skills (N Total)".
 # Intentionally does NOT match "7 fork-unique skills", "(9 subtests)", or "7 more agents. ... skills".
-COUNT_RE='[0-9]+\+?[[:space:]]+(composable[[:space:]]+|beads-native[[:space:]]+|process-discipline[[:space:]]+)*skills\b|Skills[[:space:]]*\([0-9]+[[:space:]]*Total\)'
+# Also catches CJK count literals (e.g. "24 项技能", "24个技能", "24 个可组合技能") — these slipped past the
+# English-only pattern before (the README.zh-CN.md "24 项技能" regression). Alternation, not a bracket class,
+# for multibyte safety under GNU grep + UTF-8.
+COUNT_RE='[0-9]+\+?[[:space:]]+(composable[[:space:]]+|beads-native[[:space:]]+|process-discipline[[:space:]]+)*skills\b|Skills[[:space:]]*\([0-9]+[[:space:]]*Total\)|[0-9]+[[:space:]]*(个|项)?[[:space:]]*(可组合)?技能'
 
 # Files excluded from the drift scan (each with a reason):
 #   docs/**              macro-driven ({{ skill_count }})
@@ -75,7 +78,7 @@ self_test() {
     echo "SELF-TEST FAIL: clean fixture should pass"; rc=1; fi
   # (b) injected total-count literals are caught — covers the bare, multi-adjective, and N+ forms
   local form
-  for form in 'This repo has 25 skills now.' '25 composable process-discipline skills' 'Run /skills — 25+ skills available'; do
+  for form in 'This repo has 25 skills now.' '25 composable process-discipline skills' 'Run /skills — 25+ skills available' '本仓库有 25 项技能。' '现在有25个可组合技能'; do
     printf '%s\n' "$form" > "$tmp/README.md"; git -C "$tmp" add -A
     if drift_check "$tmp" >/dev/null 2>&1; then echo "SELF-TEST FAIL: injected literal not caught: $form"; rc=1; fi
   done
