@@ -15,9 +15,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Precise total-count regex: a number + optional count-qualifier adjective + "skills", or "Skills (N Total)".
 # Intentionally does NOT match "7 fork-unique skills", "(9 subtests)", or "7 more agents. ... skills".
-# Also catches CJK count literals (e.g. "24 项技能", "24个技能", "24 个可组合技能") — these slipped past the
-# English-only pattern before (the README.zh-CN.md "24 项技能" regression). Alternation, not a bracket class,
-# for multibyte safety under GNU grep + UTF-8.
+# Also catches CJK count literals: any number adjacent to 技能 (with optional 个/项 separator and 可组合),
+# e.g. "24 项技能", "24个技能", "24 个可组合技能" — the list is illustrative, not exhaustive. The English-only
+# pattern let the README.zh-CN.md "24 项技能" regression slip past. Alternation, not a bracket class, for
+# multibyte safety under GNU grep + UTF-8.
 COUNT_RE='[0-9]+\+?[[:space:]]+(composable[[:space:]]+|beads-native[[:space:]]+|process-discipline[[:space:]]+)*skills\b|Skills[[:space:]]*\([0-9]+[[:space:]]*Total\)|[0-9]+[[:space:]]*(个|项)?[[:space:]]*(可组合)?技能'
 
 # Files excluded from the drift scan (each with a reason):
