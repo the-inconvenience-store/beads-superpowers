@@ -1,6 +1,6 @@
 ---
 machine_translated: true
-description: {{ skill_count }} 个可组合技能的完整参考，包含触发映射、分类说明、bd 命令用法，以及展示技能相互调用关系的链式图。
+description: 可组合技能的完整参考，包含触发映射、分类说明、bd 命令用法，以及展示技能相互调用关系的链式图。
 ---
 !!! warning "机器翻译"
     本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以[英文原文](skills.md)为准。
@@ -216,7 +216,7 @@ graph TD
 
 **触发条件：** 会话开始、压缩后，或"catch me up"/"where are we"。
 
-运行 `bd prime`，深入研究代码库（自适应仓库大小），并生成结构化的当前状态摘要。预发布验证门将摘要中的每个声明都与会话中实际运行的命令相对应，beads 与 git 的对比检查会标记已发布但仍处于开放状态的工作。
+运行 `bd prime`，深入研究代码库（子智能体的并行扇出按仓库规模分级：`<40` / `40–150` / `>150` 个被跟踪文件），并生成结构化的当前状态摘要。它会将最新的 `.internal/handoff/` 文档（由其对应技能 `session-handoff` 写入）作为未读收件箱读取，纳入摘要后在结束时归档，以免后续会话重复读取；当 `HEAD` 已越过该文档记录的提交时，HEAD 时效性回退机制会将其标记为可能过时。预发布验证门将摘要中的每个声明都与会话中实际运行的命令相对应，beads 与 git 的对比检查会标记已发布但仍处于开放状态的工作，并在结束时清理被取代的 `continuation-*` 记忆。
 
 ### auditing-upstream-drift
 
@@ -266,6 +266,7 @@ graph TD
 |---|---|---|
 | 创建史诗 | `bd create "Epic: name" -t epic` | SDD, executing-plans |
 | 创建任务 | `bd create "Task: name" -t task --parent <epic>` | SDD, executing-plans |
+| 原子化计划创建 | `bd create --graph plan.json [--dry-run]` | writing-plans, SDD |
 | 快速捕获 | `bd q "title"` | 任意技能 |
 | 认领工作 | `bd update <id> --claim` | executing-plans |
 | 完成工作 | `bd close <id> --reason "why"` | 所有执行类技能 |
@@ -273,7 +274,7 @@ graph TD
 | 复合查询 | `bd query "status=open AND priority<=1"` | getting-up-to-speed（替代 `bd list` + jq） |
 | 分组计数 | `bd count --by-status` | getting-up-to-speed（也可用 `--by-priority`/`--by-type`） |
 | 添加依赖 | `bd dep add <child> <parent>` | SDD, writing-plans |
-| 存储学习 | `bd remember "insight"` | {{ skill_count }} 个技能中的 21 个会提示执行此操作 |
+| 存储学习 | `bd remember "insight"` | {{ skill_count }} 个技能中的大多数会提示执行此操作 |
 | 附加证据 | `bd note <id> "context"` | verification |
 | 解释依赖 | `bd ready --explain` | systematic-debugging, executing-plans |
 | 原子批量操作 | `bd batch` (stdin) | SDD, executing-plans, finishing-branch |

@@ -1,5 +1,6 @@
 ---
 machine_translated: true
+description: 可组合技能为 AI 智能体强制执行 TDD、调试与代码审查；基于 Dolt 的任务记忆在会话间保持上下文。已在 Claude Code、Codex 和 OpenCode 上验证；在 Cursor、Gemini CLI、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 上为尽力支持。
 ---
 !!! warning "机器翻译"
     本页面由 AI 自动翻译，可能存在术语或语义偏差。如有疑问，请以[英文原文](index.md)为准。

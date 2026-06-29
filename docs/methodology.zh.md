@@ -127,13 +127,13 @@ graph TD
 
 **步骤9——文档。** `document-release` 扫描差异与现有文档的对比，查找过时引用、缺失条目和过时示例。当审计标记需要大量散文重写的部分时，`write-documentation` 对这些部分触发。
 
-**步骤10——关闭分支。** `finishing-a-development-branch` 检测当前环境——普通仓库、命名分支 worktree 或游离 HEAD——并呈现上下文感知选项：普通和 worktree 上下文有4个选择，游离 HEAD（无法合并）有3个选择。基于来源的清理只删除 `.worktrees/` 内的 worktree，不影响外部创建的 worktree。该技能以 Land the Plane 协议结束：`bd close` → `bd dolt push` → `git push` → `git status`。分支路径在此终止——直到任务状态和代码都到达远端，工作才算完成。
+**步骤10——关闭分支。** `finishing-a-development-branch` 检测当前环境——普通仓库、命名分支 worktree 或游离 HEAD——并呈现上下文感知选项：普通和 worktree 上下文有4个选择，游离 HEAD（无法合并）有3个选择。基于来源的清理只删除 `.worktrees/` 内的 worktree，不影响外部创建的 worktree。该技能以 Land the Plane 协议结束：若本次会话产生了多条新记忆，先提供一次 `memory-curator` 整理再执行 `bd dolt push`；随后 `bd close` → `bd dolt push` → `git push` → `git status`。分支路径在此终止——直到任务状态和代码都到达远端，工作才算完成。
 
-**步骤11——会话关闭。** 仅在非分支路径（研究查询、未创建分支的快速任务）上触发。运行与步骤10 Land the Plane 相同的关闭仪式：关闭 bead、推送到远端、验证干净状态。下一个会话运行 `bd prime` 以恢复完整状态。
+**步骤11——会话关闭。** 仅在非分支路径（研究查询、未创建分支的快速任务）上触发。运行与步骤10 Land the Plane 相同的关闭仪式：关闭 bead、若本次会话产生了多条新记忆则提供一次 `memory-curator` 整理、推送到远端、验证干净状态。下一个会话运行 `bd prime` 以恢复完整状态。
 
 ## 智能体记忆
 
-由于 beads 追踪每个流程步骤，智能体所需的记忆类型作为遵循工作流的副作用而填充。{{ skill_count }} 个技能中的21个现在在其自然完成点提示 `bd remember`——调试后的根本原因、brainstorming 后的设计决策、代码审查后的审查洞察——因此记忆捕获发生在技能工作流内，而不是作为单独步骤。
+由于 beads 追踪每个流程步骤，智能体所需的记忆类型作为遵循工作流的副作用而填充。{{ skill_count }} 个技能中的大多数现在在其自然完成点提示 `bd remember`——调试后的根本原因、brainstorming 后的设计决策、代码审查后的审查洞察——因此记忆捕获发生在技能工作流内，而不是作为单独步骤。
 
 | 记忆类型 | Beads 功能 | 它回答什么 |
 |----------|-----------|-----------|
@@ -144,6 +144,8 @@ graph TD
 | 情节记忆 | `events` 表 | 发生了什么以及何时发生？ |
 | 语义记忆 | `bd search`、`bd query` | 相关工作在哪里？ |
 | 前瞻记忆 | `bd ready` | 我接下来应该做什么？ |
+
+`memory-curator` 技能会整合、去重并修剪 `bd remember` 积累的记忆库——在会话关闭时若捕获了多条新记忆则提供，或可随时按需调用。
 
 ## 研究基础
 
