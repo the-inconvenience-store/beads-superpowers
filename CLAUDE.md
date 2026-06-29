@@ -246,7 +246,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | dispatching-parallel-agents    | 2+ independent tasks without shared state                                                                                   |
 | writing-skills                 | Meta-skill for creating/modifying skills                                                                                    |
 | auditing-upstream-drift        | Detect staleness vs upstream superpowers/beads                                                                              |
-| getting-up-to-speed            | Session orientation — bd context + adaptive codebase deep-dive + structured current-state summary                           |
+| getting-up-to-speed            | Session orientation — reads latest session-handoff doc + bd context + adaptive codebase deep-dive + structured current-state summary |
 | research-driven-development    | Parallel research agents → synthesized knowledge base document. Triggers on "research this", "what is X", "how does Y work" |
 | write-documentation            | Human-quality prose for all human-facing text — 14-rule writing system with context-first drafting and required checks      |
 | memory-curator                 | Session-close/on-demand memory consolidation — quality-gated extract, dedup, consolidate, prune (evidence-led)              |
