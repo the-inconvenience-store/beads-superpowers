@@ -90,7 +90,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 7 best-effort harn
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh` copies `yegge.md` globally.
 - `docs/` — MkDocs Material source pages (6 EN + 6 ZH pages + assets). Template variables (`{{ skill_count }}`) computed at build time via `main.py` macros plugin. Contains ONLY website content.
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
-- `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs.
+- `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — 6 test suites: brainstorm-server (Node.js), claude-code skill tests, explicit-skill-requests, installer (Docker E2E), skill-triggering, subagent-driven-dev.
 - `scripts/` — `bump-version.sh` (sync version across 9 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 7 more CLIs (Cursor, Gemini, Copilot, Droid, Antigravity, Kimi, Pi).
@@ -151,6 +151,8 @@ decisions/                 # Architecture Decision Records (gitignored, local-on
   research/                # Research output from research-driven-development
   audits/                  # Upstream drift audit reports
   reference/               # Upstream design docs
+  sdd/                     # SDD scratch — briefs, reports, diffs
+  brainstorm/              # Brainstorm server sessions
   windows/                 # Windows polyglot hook docs
   SETUP-GUIDE.md           # Installation and setup guide
   testing.md               # Test infrastructure docs

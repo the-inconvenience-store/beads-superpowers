@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Skill scratch standardized to one root.** SDD and brainstorm working files now live under `.internal/` (`.internal/sdd/`, `.internal/brainstorm/`) instead of a separate `.superpowers/` root. Both self-ignore so they stay out of git even in downstream repos that don't ignore `.internal/`; brainstorm's gains this to keep its session auth token (`.last-token`) from ever being committed. The brainstorm server (`server.cjs`) is unchanged.
+
 ## [0.8.2] - 2026-06-30
 
 ### Added
