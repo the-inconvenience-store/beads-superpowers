@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Skill scratch standardized to one root.** SDD and brainstorm working files now live under `.internal/` (`.internal/sdd/`, `.internal/brainstorm/`) instead of a separate `.superpowers/` root. Both self-ignore so they stay out of git even in downstream repos that don't ignore `.internal/`; brainstorm's gains this to keep its session auth token (`.last-token`) from ever being committed. The brainstorm server (`server.cjs`) is unchanged.
 
+### Fixed
+
+- **`npx --copy` setup no longer installs a no-op session-start hook.** On a skills-only
+  `npx skills add … --copy` install there is no `hooks/` directory, so the setup skill's hook-content
+  resolver found nothing and installed an empty hook — silently disabling skill auto-activation for
+  those users. The two canonical hooks now ship as byte-identical copies inside the setup skill
+  (`skills/setup/session-start.sh`, `skills/setup/superpowers-reminder.sh`), the resolver prefers
+  them, and a `cmp` guard (now enforced in pre-commit, alongside a skills-only-layout test) keeps the
+  copies from drifting. Marketplace-plugin and native installs were unaffected. Existing `--copy`
+  users who installed the broken hook should **re-run the setup skill** to regenerate it.
+
 ## [0.8.2] - 2026-06-30
 
 ### Added
