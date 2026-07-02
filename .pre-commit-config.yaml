@@ -52,7 +52,7 @@ repos:
         pass_filenames: false
         always_run: true
       - id: convention-sync
-        name: Convention blocks + co-located hook byte-identity guard
+        name: Convention blocks guard (check-convention-sync)
         entry: bash scripts/check-convention-sync.sh
         language: system
         pass_filenames: false

@@ -14,7 +14,7 @@ SUPERPOWERS REMINDER: Before responding, check if any beads-superpowers skill ap
 - Writing human-facing prose → beads-superpowers:write-documentation
 - Branch complete → beads-superpowers:finishing-a-development-branch
 - Memory consolidation/cleanup → beads-superpowers:memory-curator
-Also available: document-release, getting-up-to-speed, dispatching-parallel-agents, project-init, setup, writing-skills, auditing-upstream-drift
+Also available: document-release, getting-up-to-speed, dispatching-parallel-agents, project-init, writing-skills, auditing-upstream-drift
 If even 1% chance a skill applies, you MUST invoke it via the Skill tool.
 Production-Grade Doctrine: treat every project as production-facing — no shortcuts, no descoping, no accepted risk, never a security regression.
 Capturing decisions: made a hard-to-reverse, genuinely surprising decision that was a real trade-off? You MUST offer to record an ADR in decisions/ — bias toward offering rather than skipping, never rationalize it away. Skip only routine clarifications and scope questions.
