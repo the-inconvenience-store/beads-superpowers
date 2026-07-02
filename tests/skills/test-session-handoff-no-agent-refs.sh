@@ -8,7 +8,6 @@ fail=0
 # Agent-facing surfaces that must NOT mention the skill.
 SURFACES=(
   "skills/using-superpowers/SKILL.md"
-  "hooks/superpowers-reminder.sh"
   "hooks/session-start"
   "example-workflow/agents/yegge.md"
   "hooks/hooks.json"

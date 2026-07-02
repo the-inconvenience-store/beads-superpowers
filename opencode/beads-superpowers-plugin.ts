@@ -1,6 +1,6 @@
 import type { Plugin } from "@opencode-ai/plugin"
 import { readFileSync } from "fs"
-import { join, dirname } from "path"
+import { join } from "path"
 import { execSync } from "child_process"
 
 export const BeadsSuperpowers: Plugin = async () => {
@@ -12,27 +12,13 @@ export const BeadsSuperpowers: Plugin = async () => {
     join(home, ".agents/skills/using-superpowers/SKILL.md"),
   ]
 
-  let skillPath = ""
   let skillContent = ""
   for (const p of skillCandidates) {
     try {
       skillContent = readFileSync(p, "utf-8")
-      skillPath = p
       break
     } catch {
       // try next
-    }
-  }
-
-  // Read reminder-content.txt co-located with SKILL.md; strip full-line # comments
-  // (equivalent to bash: sed '/^[[:space:]]*#/d')
-  let reminder = ""
-  if (skillPath) {
-    try {
-      const raw = readFileSync(join(dirname(skillPath), "reminder-content.txt"), "utf-8")
-      reminder = raw.split("\n").filter(line => !/^\s*#/.test(line)).join("\n")
-    } catch {
-      // reminder-content.txt not found — per-turn reminder skipped
     }
   }
 
@@ -52,7 +38,7 @@ export const BeadsSuperpowers: Plugin = async () => {
 
   return {
     // Hook 1: first chat.message of a session → bootstrap (using-superpowers + bd prime), once only.
-    // Subsequent messages → per-turn reminder from reminder-content.txt.
+    // No per-turn injection (ADR-0039).
     // Injection is via output.parts mutation (returning objects is a no-op in @opencode-ai/plugin).
     "chat.message": async (input: { sessionID: string }, output: { message: unknown; parts: any[] }) => {
       if (!seen.has(input.sessionID)) {
@@ -63,8 +49,6 @@ export const BeadsSuperpowers: Plugin = async () => {
         const prime = bdPrime()
         const text = prime ? `${bootstrap}\n\n<beads-context>\n${prime}\n</beads-context>` : bootstrap
         output.parts.unshift({ type: "text", text })
-      } else if (reminder) {
-        output.parts.unshift({ type: "text", text: reminder })
       }
     },
 

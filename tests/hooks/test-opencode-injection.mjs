@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-// test-opencode-injection.mjs — OpenCode plugin mutation test
+// test-opencode-injection.mjs — hermetic plugin test (ADR-0039 + bead 3ogl.13).
+// HOME is a temp fixture; resolution never touches the real machine.
+// Per-turn injection must be GONE.
 //
 // Run with:
 //   npx tsx tests/hooks/test-opencode-injection.mjs
@@ -11,9 +13,23 @@
 import assert from "node:assert"
 import { fileURLToPath } from "node:url"
 import { dirname, join } from "node:path"
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs"
+import { tmpdir } from "node:os"
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const pluginPath = join(__dirname, "../../opencode/beads-superpowers-plugin.ts")
+
+const fixtureHome = mkdtempSync(join(tmpdir(), "bsp-oc-test-"))
+const skillDir = join(fixtureHome, ".claude/skills/using-superpowers")
+mkdirSync(skillDir, { recursive: true })
+writeFileSync(join(skillDir, "SKILL.md"), "# fixture skill\nEXTREMELY_IMPORTANT fixture body\n")
+// Co-located reminder-content.txt so the pre-removal plugin has something to inject on
+// message 2 — without this the old else-if branch is unreachable (empty reminder) and
+// Test 2 would false-positive-pass before the fix, proving nothing (root-caused via
+// systematic-debugging before writing this fixture line).
+writeFileSync(join(skillDir, "reminder-content.txt"), "SUPERPOWERS REMINDER: fixture reminder body\n")
+process.env.HOME = fixtureHome
+process.env.PATH = "/nonexistent" // bd absent → bdPrime() returns ""
 
 let BeadsSuperpowers
 try {
@@ -39,41 +55,35 @@ if (typeof BeadsSuperpowers !== "function") {
   process.exit(1)
 }
 
-// Instantiate the plugin (factory call — OpenCode calls this once per process)
-const hooks = await BeadsSuperpowers({})
+const hooks = await BeadsSuperpowers()
 
-// ── Test 1: first chat.message mutates output.parts (bootstrap injected) ──────
-const sid = "s1"
-const out1 = { message: {}, parts: [] }
-await hooks["chat.message"]({ sessionID: sid }, out1)
-assert.ok(out1.parts.length > 0, "first message must inject bootstrap into output.parts")
-console.log("PASS: first message injects into output.parts")
+// Test 1: first message injects the bootstrap
+const p1 = { message: {}, parts: [] }
+await hooks["chat.message"]({ sessionID: "s1" }, p1)
+assert.strictEqual(p1.parts.length, 1, "first message injects exactly one part")
+assert.ok(p1.parts[0].text.includes("EXTREMELY_IMPORTANT"), "bootstrap contains skill body")
 
-// ── Test 2: second same-session message does NOT re-inject the bootstrap ───────
-const out2 = { message: {}, parts: [] }
-await hooks["chat.message"]({ sessionID: sid }, out2)
-assert.ok(
-  !out2.parts.some(p => String(p.text || "").includes("EXTREMELY_IMPORTANT")),
-  "second same-session message must NOT re-inject the bootstrap (once-per-session guard)"
-)
-console.log("PASS: second message skips bootstrap (once-per-session guard)")
+// Test 2: second message injects NOTHING (per-turn reminder removed, ADR-0039)
+const p2 = { message: {}, parts: [] }
+await hooks["chat.message"]({ sessionID: "s1" }, p2)
+assert.strictEqual(p2.parts.length, 0, "subsequent messages inject nothing")
 
-// ── Test 3: compaction mutates output.context (push, not return) ───────────────
-const outc = { context: [] }
-await hooks["experimental.session.compacting"]({ sessionID: sid }, outc)
-assert.ok(outc.context.length > 0, "compaction must push to output.context")
-console.log("PASS: compaction pushes to output.context")
+// Test 3: compaction pushes context
+const c = { context: [] }
+await hooks["experimental.session.compacting"]({ sessionID: "s1" }, c)
+assert.strictEqual(c.context.length, 1, "compaction pushes one context entry")
+assert.ok(c.context[0].includes("beads-superpowers is installed"), "compaction pointer present")
 
-// ── Test 4: injected reminder contains no full-line # comments ─────────────────
-// (Verifies that reminder-content.txt maintainer comments are stripped before injection)
-for (const p of out2.parts) {
-  const lines = String(p.text || "").split("\n")
-  const commentLines = lines.filter(line => /^\s*#/.test(line))
-  assert.ok(
-    commentLines.length === 0,
-    `injected reminder must contain no full-line # comments; found: ${commentLines.join(" | ")}`
-  )
-}
-console.log("PASS: injected reminder contains no full-line # comments")
+// Test 4: skill-not-found HOME → hint injected on first message.
+// No re-import needed: BeadsSuperpowers reads process.env.HOME at CONSTRUCTION
+// (each `await BeadsSuperpowers()` call), so re-invoke the same import.
+const emptyHome = mkdtempSync(join(tmpdir(), "bsp-oc-empty-"))
+process.env.HOME = emptyHome
+const hooks2 = await BeadsSuperpowers()
+const p3 = { message: {}, parts: [] }
+await hooks2["chat.message"]({ sessionID: "s2" }, p3)
+assert.ok(p3.parts[0].text.includes("not found"), "notFoundHint injected when skill missing")
 
-console.log("ALL TESTS PASSED")
+rmSync(fixtureHome, { recursive: true, force: true })
+rmSync(emptyHome, { recursive: true, force: true })
+console.log("PASS: opencode plugin — bootstrap once, no per-turn, compaction OK, not-found hint OK")
