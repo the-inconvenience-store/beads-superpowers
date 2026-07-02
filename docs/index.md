@@ -1,6 +1,6 @@
 ---
 title: beads-superpowers — Process Discipline and Persistent Memory for AI Coding Agents
-description: Composable skills enforce TDD, debugging, and code review for AI agents. Dolt-backed task memory persists across sessions. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
+description: Composable skills enforce TDD, debugging, and code review for AI agents. Dolt-backed task memory persists across sessions. Verified on Claude Code, Codex, and OpenCode; best-effort on Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
 ---
 
 # beads-superpowers
@@ -9,7 +9,7 @@ A plugin for AI coding agents with **{{ skill_count }}** skills that enforce dev
 
 The skills come from [Superpowers](https://github.com/obra/superpowers) by Jesse Vincent; the tracker from [Beads](https://github.com/gastownhall/beads) by Steve Yegge. This plugin wires them together so skills create and close issues as they run, and the tracker feeds context back into each new session.
 
-**Verified** on Claude Code, Codex CLI, and OpenCode. **Best-effort** native support for Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi. See [Getting Started](getting-started.md#supported-platforms) for install paths by platform.
+**Verified** on Claude Code, Codex CLI, and OpenCode. **Best-effort** native support for Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi. See [Getting Started](getting-started.md#supported-platforms) for install paths by platform.
 
 **Current version:** v{{ version }} · {{ skill_count }} skills
 

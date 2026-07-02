@@ -15,7 +15,7 @@
 
 ---
 
-一款适用于 Claude Code、Codex、OpenCode 及另外 7 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。可组合技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
+一款适用于 Claude Code、Codex、OpenCode 及另外 6 款 AI 编程智能体的插件，让你的智能体在编写代码前先写测试、有条不紊地调试而非盲目猜测，并记住昨天做了什么。可组合技能强制执行这些实践；基于 Dolt 的问题追踪器在会话间保持上下文。
 
 ## 工作原理
 
@@ -74,7 +74,6 @@
 | 技能 | 功能说明 |
 |------|---------|
 | `using-superpowers` | 引导程序——在会话开始时注入，路由到正确的技能 |
-| `setup` | 安装后的钩子配置（SessionStart + UserPromptSubmit） |
 | `writing-skills` | 用于创建或修改本插件技能的元技能 |
 | `auditing-upstream-drift` | 检测相对于上游 superpowers 和 beads 版本的过时情况 |
 
@@ -100,7 +99,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 开启新的 Claude Code 会话，输入"where are we"——智能体将加载你的 `bd` 上下文，从上次中断处继续。
 
-使用其他智能体？请参阅[安装](#安装)，了解在 Codex、OpenCode、Cursor、Gemini CLI、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 上的原生安装方法。
+使用其他智能体？请参阅[安装](#安装)，了解在 Codex、OpenCode、Cursor、GitHub Copilot CLI、Kimi Code、Antigravity、Factory Droid 和 Pi 上的原生安装方法。
 
 ## 前提条件
 
@@ -159,18 +158,6 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 在 Cursor 智能体内运行此命令。通过 Marketplace UI 更新。
 
-#### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/DollarDill/beads-superpowers
-```
-
-更新：
-
-```bash
-gemini extensions update beads-superpowers
-```
-
 #### GitHub Copilot CLI
 
 ```bash
@@ -219,11 +206,20 @@ pi install git:github.com/DollarDill/beads-superpowers
 
 #### 通用回退（npx）
 
-适用于所有支持 Vercel Skills 格式的 CLI：
+> **从 ≤0.8.2 版本升级：** 早期版本注册了一个每次提示都会触发的提醒钩子，现已不再随插件提供。如果你的 `~/.claude/settings.json` 中仍引用 `superpowers-reminder.sh`，请先备份，然后移除该条目：
+>
+> ```bash
+> cp ~/.claude/settings.json ~/.claude/settings.json.bak
+> python3 -c "import json,os;p=os.path.expanduser('~/.claude/settings.json');d=json.load(open(p));u=[m for m in d.get('hooks',{}).get('UserPromptSubmit',[]) if not any('superpowers-reminder' in h.get('command','') for h in m.get('hooks',[]))];d.get('hooks',{}).update({'UserPromptSubmit':u}) if u else d.get('hooks',{}).pop('UserPromptSubmit',None);json.dump(d,open(p,'w'),indent=2)"
+> ```
+
+仅安装技能——不包含钩子。技能激活依赖于你所用智能体自身的原生技能发现机制。
 
 ```bash
 npx skills add DollarDill/beads-superpowers -g --copy -y
 ```
+
+如需完整体验（会话启动上下文注入 + 自动 `bd prime`），请使用插件安装方式（上文的 Claude Code / Codex / OpenCode）或脚本安装。若要在 npx 安装中获取 beads 上下文，运行 `bd setup claude`（beads 自带的钩子安装器）。
 
 ### 替代方案：脚本安装（`curl | bash`）
 
@@ -234,7 +230,7 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 该脚本的作用不仅限于复制文件。当你需要以下任何功能时使用它：
 
 - **Beads/Dolt 初始化** — 自动检测 `bd` 是否已安装并引导设置
-- **钩子注册** — 将 SessionStart 和 UserPromptSubmit 条目写入 `settings.json`（使用 npx 或手动安装时必需）
+- **钩子注册** — 将 SessionStart 条目写入 settings.json（使用脚本安装路径时必需）
 - **`yegge.md` 编排器** — 可选地全局安装编排器智能体
 - **版本锁定** — `--version X.Y.Z` 用于可重现的 CI 安装
 - **CI 环境** — 使用 `--yes --skip-checksum` 进行无人值守运行

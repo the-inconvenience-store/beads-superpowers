@@ -76,8 +76,6 @@ graph TB
 
 **并行批处理模式。** 当 `bd ready --parent` 返回多个未被阻塞的任务时，`subagent-driven-development` 并发执行这些任务（每批最多5个），每个任务在其自己的 `bd worktree` 中运行。
 
-**会话中执行。** `UserPromptSubmit` 钩子在每条用户消息时触发，注入技能触发提醒，防止智能体在会话进行过程中忘记调用技能。
-
 **仅编排者设计。** 只有编排智能体创建、认领和关闭 bead。子智能体专注于自己的工作。唯一的例外是 `implementer-prompt.md`，它在设计上具有 beads 感知——包含 bead 生命周期命令、强制技能调用和 LSP 优先的代码导航。
 
 ## 生命周期

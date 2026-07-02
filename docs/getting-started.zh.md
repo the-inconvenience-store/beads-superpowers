@@ -42,7 +42,6 @@ npm install -g @beads/bd    # any platform
 | CLI | 安装 | 更新 | 备注 |
 |-----|---------|--------|-------|
 | Cursor | `/add-plugin beads-superpowers`（在 Cursor Agent 中） | 市场 UI | 配置已由我们验证；未经端到端测试 |
-| Gemini CLI | `gemini extensions install https://github.com/DollarDill/beads-superpowers` | `gemini extensions update beads-superpowers` | |
 | GitHub Copilot CLI | `copilot plugin marketplace add DollarDill/beads-superpowers` then `copilot plugin install beads-superpowers@beads-superpowers-marketplace` | `copilot plugin update beads-superpowers` | 使用 Claude 插件回退（技能 + 通过共享 `hooks/hooks.json` 的 session-start），与上游相同的机制；需要 Copilot CLI v1.0.11+ |
 | Kimi Code | `/plugins install https://github.com/DollarDill/beads-superpowers`（之后运行 `/new`） | — | |
 | Antigravity | `agy plugin install https://github.com/DollarDill/beads-superpowers` | — | 复用 Claude 插件清单——与上游已验证的相同机制；未经我们端到端测试 |
@@ -96,14 +95,14 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 | CLI | 技能路径 | 钩子 / 插件 |
 |-----|------------|----------------|
-| Claude Code | `~/.claude/skills/` | `settings.json` 中的 SessionStart + UserPromptSubmit 钩子 |
+| Claude Code | `~/.claude/skills/` | `settings.json` 中的 SessionStart 钩子 |
 | Codex | `~/.codex/skills/` | 在 `~/.codex/config.toml` 中使用 `codex_hooks = true` 启用 |
 | OpenCode | `~/.config/opencode/skills/` | `~/.config/opencode/plugins/` 处的 TypeScript 插件（自动激活） |
 
 在以下任一情况下，请使用脚本安装：
 
 - **Beads/Dolt 引导** — 自动检测 `bd` 是否已安装并引导配置
-- **钩子注册** — 将 SessionStart 和 UserPromptSubmit 条目写入 `settings.json`（使用 npx 或手动安装路径时必需）
+- **钩子注册** — 将 SessionStart 条目写入 `settings.json`（使用 npx 或手动安装路径时必需）
 - **`yegge.md` 协调器** — 可选择在全局安装协调器智能体
 - **版本固定** — 使用 `--version X.Y.Z` 实现可重现的 CI 安装
 - **CI 环境** — 使用 `--yes --skip-checksum` 进行无人值守运行
@@ -114,11 +113,10 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 
 ```bash
 npx skills add DollarDill/beads-superpowers -a claude-code -g --copy -y
-# npx installs skills only — no hooks. Run the setup skill in your
-# chosen agentic terminal to configure the SessionStart and
-# UserPromptSubmit hooks.
 # Use -a codex to also install for Codex CLI.
 ```
+
+仅安装技能——不包含钩子。技能激活依赖于你所用智能体自身的原生技能发现机制。如需完整体验（会话启动上下文注入 + 自动 `bd prime`），请使用插件安装方式或[脚本安装](#脚本安装curl--bash)。若要在 npx 安装中获取 beads 上下文，运行 `bd setup claude`（beads 自带的钩子安装器）。
 
 ## 首次项目设置
 
@@ -154,12 +152,6 @@ claude plugin marketplace update beads-superpowers-marketplace
 codex plugin marketplace update beads-superpowers-marketplace
 ```
 
-**Gemini CLI：**
-
-```bash
-gemini extensions update beads-superpowers
-```
-
 **Copilot CLI：**
 
 ```bash
@@ -187,17 +179,12 @@ npx skills add DollarDill/beads-superpowers -g --copy -y
 
 ## 钩子的工作原理
 
-该插件通过 `hooks/hooks.json` 注册两个钩子：
-
-**SessionStart** 在每次会话启动、清除和压缩时触发。它读取 `using-superpowers` 技能（该技能路由到所有其他技能），运行 `bd prime` 以捕获 Beads 状态和持久记忆，并输出合并后的上下文（约 2–3k tokens）。如果 `bd prime` 已在其他地方注册为钩子，则此步骤会自动跳过。
-
-**UserPromptSubmit** 在每条用户消息时触发。它注入一条提醒，列出所有 {{ invocable_count }} 个可调用技能及其触发条件——"bug → systematic-debugging"、"new feature → brainstorming"等。这可以防止智能体在会话中途忘记技能。
+Claude Code 和 Codex 共用一个钩子，通过 `hooks/hooks.json` 注册：**SessionStart**。它在每次会话启动、清除和压缩时触发，读取 `using-superpowers` 技能（该技能路由到所有其他技能），运行 `bd prime` 以捕获 Beads 状态和持久记忆，并输出合并后的上下文（约 2–3k tokens）。如果 `bd prime` 已在其他地方注册为钩子，则此步骤会自动跳过。
 
 ```mermaid
 sequenceDiagram
-  participant CC as CLI (Claude Code / Codex / OpenCode)
+  participant CC as CLI (Claude Code / Codex)
   participant SH as SessionStart Hook
-  participant UP as UserPromptSubmit Hook
   participant Agent as Agent
 
   CC->>SH: Session begins
@@ -205,11 +192,9 @@ sequenceDiagram
   SH->>SH: Run bd prime
   SH-->>Agent: Inject skills context + beads state
   Note over Agent: Agent is now skill-aware
-
-  CC->>UP: User sends message
-  UP-->>Agent: Inject superpowers reminder
-  Note over Agent: Agent checks skill triggers
 ```
+
+OpenCode 使用自己的 TypeScript 插件，而非 `hooks/hooks.json`，包含两个进程内钩子：`chat.message` 钩子在每次会话中仅首次注入相同的引导内容，`experimental.session.compacting` 钩子在上下文窗口压缩后重新注入 beads 上下文。
 
 ## 配置
 
@@ -244,5 +229,7 @@ ln -s ~/workplace/beads-superpowers \
 或者重新安装。注意：`claude plugin update` 存在已知的[缓存错误](https://github.com/anthropics/claude-code/issues/14061)——符号链接方式更可靠。
 
 **钩子未触发** — 检查钩子是否可执行：`chmod +x hooks/session-start`。
+
+**从 ≤0.8.2 版本升级后残留的提醒钩子** — 早期版本注册了一个每次提示都会触发的 `superpowers-reminder.sh` 钩子，现已不再随插件提供。请参阅 README [npx 部分](https://github.com/DollarDill/beads-superpowers#universal-fallback-npx)中的迁移一行命令。
 
 **`bd dolt push` 失败** — 您需要先配置 Dolt 远端（`bd dolt remote add origin <url>`）。如果您不需要远程同步，此失败无害——Beads 在本地可以正常工作。

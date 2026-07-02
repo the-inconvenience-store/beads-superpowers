@@ -8,7 +8,7 @@ beads-superpowers ships {{ skill_count }} composable skills loaded on demand via
 
 ## Trigger map
 
-The UserPromptSubmit hook reminds the agent on every message which skill applies to which task:
+The `using-superpowers` bootstrap, injected at session start, tells the agent which skill applies to which task:
 
 | Task | Skill |
 |---|---|
@@ -28,7 +28,7 @@ The UserPromptSubmit hook reminds the agent on every message which skill applies
 | Consolidate or dedup memories | `memory-curator` |
 | Hand work to the next session | `session-handoff` (human-invoked) |
 
-Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `setup`, `writing-skills`, `auditing-upstream-drift`
+Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel-agents`, `project-init`, `writing-skills`, `auditing-upstream-drift`
 
 ## By category
 
@@ -41,7 +41,7 @@ Also available: `document-release`, `getting-up-to-speed`, `dispatching-parallel
 | **Review** | [requesting-code-review](#requesting-code-review), [receiving-code-review](#receiving-code-review) |
 | **Infrastructure** | [using-git-worktrees](#using-git-worktrees), [finishing-a-development-branch](#finishing-a-development-branch) |
 | **Lifecycle** | [document-release](#document-release), [getting-up-to-speed](#getting-up-to-speed), [auditing-upstream-drift](#auditing-upstream-drift), [memory-curator](#memory-curator), [session-handoff](#session-handoff) |
-| **Setup** | [setup](#setup), [project-init](#project-init) |
+| **Setup** | [project-init](#project-init) |
 | **Research** | [research-driven-development](#research-driven-development) |
 | **Writing** | [write-documentation](#write-documentation) |
 
@@ -88,7 +88,6 @@ graph TD
     SH["session-handoff"]
   end
   subgraph Setup
-    SET["setup"]
     PI["project-init"]
   end
   subgraph Research
@@ -227,12 +226,6 @@ Audits against [obra/superpowers](https://github.com/obra/superpowers) and [gast
 **Trigger:** At session-close when several new memories were captured, or on-demand for a full sweep.
 
 Turns a session's raw `bd remember` notes into well-structured, deduplicated, consolidated memories using the in-session agent — no runtime, key, or embeddings. The scope is deliberately evidence-led: quality-gated capture, reflection-consolidation, and pruning, not structural richness. It never mutates the store silently — it proposes a reviewed command list, and you approve before anything is written.
-
-### setup
-
-**Trigger:** After npx install, or when skills aren't activating.
-
-Registers the SessionStart hook in `.claude/settings.json` so skills activate automatically. The plugin's session-start hook automatically detects `bd setup claude` hooks and skips duplicate `bd prime` calls.
 
 ### project-init
 

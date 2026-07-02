@@ -13,7 +13,7 @@
 
 ---
 
-A plugin for Claude Code, Codex, OpenCode, and 7 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
+A plugin for Claude Code, Codex, OpenCode, and 6 more AI coding agents that makes your agent write tests before code, debug systematically instead of guessing, and remember what it worked on yesterday. Composable skills enforce the practices; a Dolt-backed issue tracker keeps context across sessions.
 
 ## How it works
 
@@ -68,7 +68,6 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | Skill | What it does |
 |-------|-------------|
 | `using-superpowers` | Bootstrap — injected at session start, routes to the right skill |
-| `setup` | Post-install hook configuration (SessionStart + UserPromptSubmit) |
 | `writing-skills` | Meta-skill for creating or modifying skills in this plugin |
 | `auditing-upstream-drift` | Detects staleness vs upstream superpowers and beads releases |
 
@@ -94,7 +93,7 @@ bd init                               # 2. Bootstrap the Dolt database for this 
 
 Start a new Claude Code session and type "where are we" — the agent will load your `bd` context and pick up where you left off.
 
-Using a different agent? See [Installation](#installation) for native install on Codex, OpenCode, Cursor, Gemini CLI, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
+Using a different agent? See [Installation](#installation) for native install on Codex, OpenCode, Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi.
 
 ## Prerequisites
 
@@ -153,18 +152,6 @@ Config validated; not E2E-tested by us. Use with that in mind.
 
 Run this command inside Cursor Agent. Update via the Marketplace UI.
 
-#### Gemini CLI
-
-```bash
-gemini extensions install https://github.com/DollarDill/beads-superpowers
-```
-
-Update:
-
-```bash
-gemini extensions update beads-superpowers
-```
-
 #### GitHub Copilot CLI
 
 ```bash
@@ -213,11 +200,20 @@ pi install git:github.com/DollarDill/beads-superpowers
 
 #### Universal fallback (npx)
 
-Works on any CLI that supports the Vercel Skills format:
+> **Updating from ≤0.8.2:** earlier versions registered a per-prompt reminder hook that no longer ships. If your `~/.claude/settings.json` still references `superpowers-reminder.sh`, back it up, then remove the entry:
+>
+> ```bash
+> cp ~/.claude/settings.json ~/.claude/settings.json.bak
+> python3 -c "import json,os;p=os.path.expanduser('~/.claude/settings.json');d=json.load(open(p));u=[m for m in d.get('hooks',{}).get('UserPromptSubmit',[]) if not any('superpowers-reminder' in h.get('command','') for h in m.get('hooks',[]))];d.get('hooks',{}).update({'UserPromptSubmit':u}) if u else d.get('hooks',{}).pop('UserPromptSubmit',None);json.dump(d,open(p,'w'),indent=2)"
+> ```
+
+Installs the skills only — no hooks. Skill activation relies on your harness's native skill discovery.
 
 ```bash
 npx skills add DollarDill/beads-superpowers -g --copy -y
 ```
+
+For the full experience (session-start context injection + automatic `bd prime`), use the plugin install (Claude Code / Codex / OpenCode above) or the install script. To get beads context on an npx install, run `bd setup claude` (beads' own hook installer).
 
 ### Alternative: scripted install (`curl | bash`)
 
@@ -228,7 +224,7 @@ curl -fsSL https://raw.githubusercontent.com/DollarDill/beads-superpowers/main/i
 The script's role is broader than just copying files. Use it when you need any of:
 
 - **Beads/Dolt bootstrap** — auto-detects whether `bd` is installed and guides setup
-- **Hook registration** — writes SessionStart and UserPromptSubmit entries to `settings.json` (required when using npx or manual install paths)
+- **Hook registration** — writes the SessionStart entry to settings.json (required when using the install-script path)
 - **`yegge.md` orchestrator** — optionally installs the orchestrator agent globally
 - **Version pinning** — `--version X.Y.Z` for reproducible CI installs
 - **CI environments** — use `--yes --skip-checksum` for unattended runs

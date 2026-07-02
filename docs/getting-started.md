@@ -39,7 +39,6 @@ Config validated; not E2E-tested by us. Use with that in mind.
 | CLI | Install | Update | Notes |
 |-----|---------|--------|-------|
 | Cursor | `/add-plugin beads-superpowers` (in Cursor Agent) | Marketplace UI | config validated by us; not E2E-tested |
-| Gemini CLI | `gemini extensions install https://github.com/DollarDill/beads-superpowers` | `gemini extensions update beads-superpowers` | |
 | GitHub Copilot CLI | `copilot plugin marketplace add DollarDill/beads-superpowers` then `copilot plugin install beads-superpowers@beads-superpowers-marketplace` | `copilot plugin update beads-superpowers` | rides the Claude-plugin fallback (skills + session-start via the shared `hooks/hooks.json`), the same mechanism upstream ships; requires Copilot CLI v1.0.11+ |
 | Kimi Code | `/plugins install https://github.com/DollarDill/beads-superpowers` (run `/new` after) | — | |
 | Antigravity | `agy plugin install https://github.com/DollarDill/beads-superpowers` | — | reuses the Claude plugin manifest — the same mechanism upstream verified; not E2E-tested by us |
@@ -93,14 +92,14 @@ The installer auto-detects which CLIs are on your system and installs skills and
 
 | CLI | Skills path | Hooks / Plugin |
 |-----|------------|----------------|
-| Claude Code | `~/.claude/skills/` | SessionStart + UserPromptSubmit hooks in `settings.json` |
+| Claude Code | `~/.claude/skills/` | SessionStart hook in `settings.json` |
 | Codex | `~/.codex/skills/` | Enable with `codex_hooks = true` in `~/.codex/config.toml` |
 | OpenCode | `~/.config/opencode/skills/` | TypeScript plugin at `~/.config/opencode/plugins/` (active automatically) |
 
 Use the scripted install when you need any of:
 
 - **Beads/Dolt bootstrap** — auto-detects whether `bd` is installed and guides setup
-- **Hook registration** — writes SessionStart and UserPromptSubmit entries to `settings.json` (required when using npx or manual install paths)
+- **Hook registration** — writes the SessionStart entry to `settings.json` (required when using npx or manual install paths)
 - **`yegge.md` orchestrator** — optionally installs the orchestrator agent globally
 - **Version pinning** — `--version X.Y.Z` for reproducible CI installs
 - **CI environments** — use `--yes --skip-checksum` for unattended runs
@@ -111,11 +110,10 @@ Supports `--yes` (skip prompts), `--version X.Y.Z`, `--dry-run`, `--skip-checksu
 
 ```bash
 npx skills add DollarDill/beads-superpowers -a claude-code -g --copy -y
-# npx installs skills only — no hooks. Run the setup skill in your
-# chosen agentic terminal to configure the SessionStart and
-# UserPromptSubmit hooks.
 # Use -a codex to also install for Codex CLI.
 ```
+
+Installs the skills only — no hooks. Skill activation relies on your harness's native skill discovery. For the full experience (session-start context injection + automatic `bd prime`), use the plugin install or the [scripted install](#scripted-install-curl--bash). To get beads context on an npx install, run `bd setup claude` (beads' own hook installer).
 
 ## First project setup
 
@@ -151,12 +149,6 @@ claude plugin marketplace update beads-superpowers-marketplace
 codex plugin marketplace update beads-superpowers-marketplace
 ```
 
-**Gemini CLI:**
-
-```bash
-gemini extensions update beads-superpowers
-```
-
 **Copilot CLI:**
 
 ```bash
@@ -184,17 +176,12 @@ If skills aren't showing, the plugin may not be installed for your CLI. If `bd r
 
 ## How the hooks work
 
-The plugin registers two hooks via `hooks/hooks.json`:
-
-**SessionStart** fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If `bd prime` is already registered as a hook elsewhere, this step is skipped automatically.
-
-**UserPromptSubmit** fires on every user message. It injects a reminder listing all {{ invocable_count }} invocable skills with their trigger conditions — "bug → systematic-debugging", "new feature → brainstorming", etc. This keeps the agent from forgetting about skills mid-session.
+Claude Code and Codex share one hook, registered via `hooks/hooks.json`: **SessionStart**. It fires on every session start, clear, and compact. It reads the `using-superpowers` skill (which routes to all other skills), runs `bd prime` to capture beads state and persistent memories, and outputs the combined context (~2–3k tokens). If `bd prime` is already registered as a hook elsewhere, this step is skipped automatically.
 
 ```mermaid
 sequenceDiagram
-  participant CC as CLI (Claude Code / Codex / OpenCode)
+  participant CC as CLI (Claude Code / Codex)
   participant SH as SessionStart Hook
-  participant UP as UserPromptSubmit Hook
   participant Agent as Agent
 
   CC->>SH: Session begins
@@ -202,11 +189,9 @@ sequenceDiagram
   SH->>SH: Run bd prime
   SH-->>Agent: Inject skills context + beads state
   Note over Agent: Agent is now skill-aware
-
-  CC->>UP: User sends message
-  UP-->>Agent: Inject superpowers reminder
-  Note over Agent: Agent checks skill triggers
 ```
+
+OpenCode uses its own TypeScript plugin instead of `hooks/hooks.json`, with two in-process hooks: a `chat.message` hook injects the same bootstrap once per session, and an `experimental.session.compacting` hook re-injects beads context after the context window compacts.
 
 ## Configuration
 
@@ -241,5 +226,7 @@ ln -s ~/workplace/beads-superpowers \
 Or reinstall. Note: `claude plugin update` has a known [cache bug](https://github.com/anthropics/claude-code/issues/14061) — the symlink is more reliable.
 
 **Hook not firing** — Check the hook is executable: `chmod +x hooks/session-start`.
+
+**Stale reminder hook after updating from ≤0.8.2** — Earlier versions registered a per-prompt `superpowers-reminder.sh` hook that no longer ships. See the migration one-liner in the README's [npx section](https://github.com/DollarDill/beads-superpowers#universal-fallback-npx).
 
 **`bd dolt push` fails** — You need a Dolt remote configured first (`bd dolt remote add origin <url>`). If you don't need remote sync, the failure is harmless — beads works fine locally.

@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - **Skill scratch standardized to one root.** SDD and brainstorm working files now live under `.internal/` (`.internal/sdd/`, `.internal/brainstorm/`) instead of a separate `.superpowers/` root. Both self-ignore so they stay out of git even in downstream repos that don't ignore `.internal/`; brainstorm's gains this to keep its session auth token (`.last-token`) from ever being committed. The brainstorm server (`server.cjs`) is unchanged.
+- **BREAKING:** Removed the per-prompt UserPromptSubmit reminder hook on all harnesses; the SessionStart bootstrap (rebased on upstream superpowers v6.1.0, now ≤6KB) is the single recurring injection.
+- `using-superpowers` bootstrap rebased on upstream v6.1.0's lean shape; per-harness references trimmed; Gemini reference removed.
+
+### Removed
+
+- The `setup` skill. The npx path is now skills-only; hooks come from the plugin installs or `install.sh`. Run `bd setup claude` for `bd prime` on npx installs.
 
 ### Fixed
 
@@ -23,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   them, and a `cmp` guard (now enforced in pre-commit, alongside a skills-only-layout test) keeps the
   copies from drifting. Marketplace-plugin and native installs were unaffected. Existing `--copy`
   users who installed the broken hook should **re-run the setup skill** to regenerate it.
+- `install.sh` now removes stale UserPromptSubmit registrations on update/uninstall (python3, timestamped backup, foreign hooks preserved). Manual one-liner in the README npx section for users updating from ≤0.8.2.
 
 ## [0.8.2] - 2026-06-30
 
