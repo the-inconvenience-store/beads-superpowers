@@ -1,18 +1,3 @@
-# Codex Tool Mapping
-
-Skills use Claude Code tool names. When you encounter these in a skill, use your platform equivalent:
-
-| Skill references | Codex equivalent |
-|-----------------|------------------|
-| `Task` tool (dispatch subagent) | `spawn_agent` (see [Named agent dispatch](#named-agent-dispatch)) |
-| Multiple `Task` calls (parallel) | Multiple `spawn_agent` calls |
-| Task returns result | `wait` |
-| Task completes automatically | `close_agent` to free slot |
-| `bd` CLI (task tracking via beads) | Use native shell tools with `bd` commands |
-| `Skill` tool (invoke a skill) | Skills load natively — just follow the instructions |
-| `Read`, `Write`, `Edit` (files) | Use your native file tools |
-| `Bash` (run commands) | Use your native shell tools |
-
 ## Subagent dispatch requires multi-agent support
 
 Add to your Codex config (`~/.codex/config.toml`):
@@ -22,54 +7,7 @@ Add to your Codex config (`~/.codex/config.toml`):
 multi_agent = true
 ```
 
-This enables `spawn_agent`, `wait`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`.
-
-## Agent dispatch via prompt templates
-
-Skills dispatch subagents using `Task tool (general-purpose)` with a prompt
-template (e.g., `skills/requesting-code-review/code-reviewer.md`).
-Codex does not have a named agent registry — `spawn_agent` creates generic agents
-from built-in roles (`default`, `explorer`, `worker`).
-
-When a skill says to dispatch an agent via a prompt template:
-
-1. Find the skill's prompt template file (e.g., `code-reviewer.md`,
-   `task-reviewer-prompt.md`)
-2. Read the prompt content
-3. Fill any template placeholders (`{BASE_SHA}`, `{WHAT_WAS_IMPLEMENTED}`, etc.)
-4. Spawn a `worker` agent with the filled content as the `message`
-
-| Skill instruction | Codex equivalent |
-|-------------------|------------------|
-| `Task tool (general-purpose)` with template from `code-reviewer.md` | `spawn_agent(agent_type="worker", message=...)` with template content |
-| `Task tool (general-purpose)` with inline prompt | `spawn_agent(message=...)` with the same prompt |
-
-### Message framing
-
-The `message` parameter is user-level input, not a system prompt. Structure it
-for maximum instruction adherence:
-
-```
-Your task is to perform the following. Follow the instructions below exactly.
-
-<agent-instructions>
-[filled prompt content from the agent's .md file]
-</agent-instructions>
-
-Execute this now. Output ONLY the structured response following the format
-specified in the instructions above.
-```
-
-- Use task-delegation framing ("Your task is...") rather than persona framing ("You are...")
-- Wrap instructions in XML tags — the model treats tagged blocks as authoritative
-- End with an explicit execution directive to prevent summarization of the instructions
-
-### When this workaround can be removed
-
-This approach compensates for Codex's plugin system not yet supporting an `agents`
-field in `plugin.json`. When `RawPluginManifest` gains an `agents` field, the
-plugin can symlink to `agents/` (mirroring the existing `skills/` symlink) and
-skills can dispatch named agent types directly.
+This enables `spawn_agent`, `wait_agent`, and `close_agent` for skills like `dispatching-parallel-agents` and `subagent-driven-development`. When using subagent-driven-development, you should always close implementer and reviewer subagents when they have finished all their work.
 
 ## Environment Detection
 
@@ -99,3 +37,7 @@ the user to use the App's native controls:
 
 The agent can still run tests, stage files, and output suggested branch
 names, commit messages, and PR descriptions for the user to copy.
+
+## Beads
+
+| `bd` CLI (task tracking via beads) | Use native shell tools with `bd` commands |
