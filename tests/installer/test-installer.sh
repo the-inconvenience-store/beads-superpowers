@@ -177,7 +177,7 @@ assert_dir_exists "$HOME/.claude/skills/using-superpowers" "skill: using-superpo
 assert_file_exists "$HOME/.claude/skills/brainstorming/SKILL.md" "skill has SKILL.md"
 
 # Agent
-assert_file_exists "$HOME/.claude/agents/yegge.md" "agent: yegge"
+assert_file_not_exists "$HOME/.claude/agents/yegge.md" "agent: yegge NOT installed by default (opt-in)"
 
 # Hooks
 assert_file_executable "$HOME/.claude/hooks/beads-superpowers-session-start.sh" "hook: session-start executable"
@@ -467,6 +467,23 @@ fi
 
 # Cleanup
 bash /src/install.sh --uninstall 2>/dev/null || true
+
+# ============================================================
+echo "=== Group 8: Opt-in Agent Install (--with-yegge) ==="
+# ============================================================
+
+rm -rf "$HOME/.claude"
+
+start_http_server
+BEADS_SUPERPOWERS_TARBALL_URL="$TARBALL_URL" \
+  bash /src/install.sh --yes --version "$VERSION" --with-yegge
+stop_http_server
+
+assert_file_exists "$HOME/.claude/agents/yegge.md" "opt-in: yegge installed with --with-yegge"
+
+bash /src/install.sh --uninstall
+
+assert_file_not_exists "$HOME/.claude/agents/yegge.md" "opt-in: yegge removed by uninstall"
 
 # ============================================================
 echo
