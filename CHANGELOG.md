@@ -9,15 +9,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`justfile` check surface (tool, not gate).** `just check` runs the deterministic set — guards, hook tests, manifest validation, skill-contract tests, and the new install-shape suite — on demand when harness plumbing changes. `just selftest` (guard-the-guards: 4 must-fail mutations), `just server`, `just docker`, and `just docs` are opt-in. Nothing is CI-enforced by design.
+- **`tests/install-shape/` — 9-harness install-shape suite.** Sandboxed `install.sh --source` runs with inert PATH-shim fixtures assert what each harness actually receives: full artifact + uninstall round-trip assertions for Claude Code/Codex/OpenCode, hint-text + manifest assertions for the 6 best-effort harnesses (which receive guidance, not files). Proves artifacts land — does NOT prove hooks fire (see `tests/install-shape/MANUAL-VERIFICATION.md`).
+- **`install.sh --source <dir>`** — local Tier-0 install from a checkout: bypasses all download tiers, zero network, version from `package.json`. Dev/test affordance; checksum validation on the tarball path is untouched.
+- KNOWN_SKILLS≡`skills/` drift guard in `check-skill-count.sh` (catches the array silently missing a skill — a bug class that shipped once before).
+
+### Fixed
+
+- **OpenCode TS plugin was never installed by `install.sh` in any tier** — the extract dir passed to `install_opencode_from` pointed inside the skills staging dir. Found by the new install-shape suite.
+- **Uninstall was broken in two ways** (also found by the suite): `--source`/local-tier installs skipped all uninstall cleanup (missing case arm), and a trailing `[ cond ] && …` in the Codex/OpenCode uninstall helpers aborted `do_uninstall` under `set -e` whenever those harnesses were never installed.
+
 ### Changed
 
 - **Skill scratch standardized to one root.** SDD and brainstorm working files now live under `.internal/` (`.internal/sdd/`, `.internal/brainstorm/`) instead of a separate `.superpowers/` root. Both self-ignore so they stay out of git even in downstream repos that don't ignore `.internal/`; brainstorm's gains this to keep its session auth token (`.last-token`) from ever being committed. The brainstorm server (`server.cjs`) is unchanged.
 - **BREAKING:** Removed the per-prompt UserPromptSubmit reminder hook on all harnesses; the SessionStart bootstrap (rebased on upstream superpowers v6.1.0, now ≤6KB) is the single recurring injection.
 - `using-superpowers` bootstrap rebased on upstream v6.1.0's lean shape; per-harness references trimmed; Gemini reference removed.
 
+### Deprecated
+
+- The four LLM-driven test suites (`tests/skill-triggering`, `tests/explicit-skill-requests`, `tests/claude-code`, `tests/subagent-driven-dev`) are deprecated in place — successor is the external eval-harness project. Kept as reference; excluded from the `just` surface. See `tests/*/DEPRECATED.md`.
+
 ### Removed
 
 - The `setup` skill. The npx path is now skills-only; hooks come from the plugin installs or `install.sh`. Run `bd setup claude` for `bd prime` on npx installs.
+- **BREAKING:** The dormant GitHub Actions workflows `ci.yml` and `release.yml` (both manual-dispatch-only and stale). Checks live in the local `just` surface; releases are `bump-version.sh` → tag → push. `deploy-docs.yml` (docs publishing) survives.
 
 ### Fixed
 
