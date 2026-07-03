@@ -21,7 +21,7 @@ ver_match() {
   fi
 }
 for f in .claude-plugin/plugin.json .codex-plugin/plugin.json .cursor-plugin/plugin.json \
-         hooks/hooks-cursor.json gemini-extension.json .kimi-plugin/plugin.json; do
+         hooks/hooks-cursor.json .kimi-plugin/plugin.json; do
   if [ -f "$f" ]; then
     valid_json "$f"
   else
@@ -29,11 +29,9 @@ for f in .claude-plugin/plugin.json .codex-plugin/plugin.json .cursor-plugin/plu
   fi
 done
 ver_match .cursor-plugin/plugin.json '.version'
-ver_match gemini-extension.json '.version'
 ver_match .kimi-plugin/plugin.json '.version'
 jq -e '.skills=="./skills/"' .cursor-plugin/plugin.json >/dev/null && echo "cursor skills OK" || fail=1
 jq -e '.sessionStart.skill=="using-superpowers"' .kimi-plugin/plugin.json >/dev/null && echo "kimi sessionStart OK" || fail=1
-jq -e '.contextFileName=="GEMINI.md"' gemini-extension.json >/dev/null && echo "gemini ctx OK" || fail=1
 
 # Referenced-path resolution (catches runtime breakage that JSON validation misses)
 need() {
@@ -43,10 +41,6 @@ need() {
     echo "MISSING REF: $1"; fail=1
   fi
 }
-# gemini-extension.json contextFileName must exist
-need "$(jq -r .contextFileName gemini-extension.json)"
-# every @-include in GEMINI.md must resolve (strip leading '@', resolve repo-relative)
-while read -r inc; do need "${inc#@}"; done < <(grep -oE '^@\./[^[:space:]]+' GEMINI.md | sed 's#@\./#./#')
 # .kimi-plugin sessionStart.skill must map to a real skill dir
 need "skills/$(jq -r .sessionStart.skill .kimi-plugin/plugin.json)/SKILL.md"
 # hooks-cursor.json command target (run-hook.cmd) must exist
