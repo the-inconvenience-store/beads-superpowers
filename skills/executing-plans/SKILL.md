@@ -120,7 +120,7 @@ After all tasks complete and verified:
 - Reference skills when plan says to
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
-- **Production-Grade Doctrine:** Treat this as a production system with real users — no matter how small or internal it looks. You MUST NOT silently take a shortcut, descope a required behavior/edge-case, or accept a material-risk trade-off; if one is genuinely warranted you MUST surface it and let the user decide. You MUST NOT weaken, bypass, or remove a security control or add a vulnerability — a security regression is never acceptable, even for a deadline or "minimal changes." In execution this means never skipping a verification or dropping a task to make progress — `bd defer`/`bd human` are for genuine blockers, never a quiet way to descope required work.
+- **Production-Grade Doctrine:** never skip a verification or drop a task to make progress — `bd defer`/`bd human` are for genuine blockers, never a quiet way to descope required work. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
 **Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
 

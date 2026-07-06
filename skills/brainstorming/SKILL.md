@@ -13,7 +13,7 @@ Start by understanding the current project context, then ask questions one at a 
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
 
-**Production-Grade Doctrine:** Treat this as a production system with real users — no matter how small or internal it looks. You MUST NOT silently take a shortcut, descope a required behavior/edge-case, or accept a material-risk trade-off; if one is genuinely warranted you MUST surface it and let the user decide. You MUST NOT weaken, bypass, or remove a security control or add a vulnerability — a security regression is never acceptable, even for a deadline or "minimal changes." In brainstorming these choices are first made — never simplify a design by quietly cutting a required behavior.
+**Production-Grade Doctrine** applies with full force here — trade-offs are *first chosen* in brainstorming: you MUST NOT simplify a design by quietly cutting a required behavior; surface every material trade-off and let the user decide. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 
