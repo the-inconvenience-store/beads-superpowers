@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Skills no longer hardcode the Claude Code `AskUserQuestion` tool name** (ADR-0041). All ~28 instruction sites across 10 skills now use generic "structured question tool" phrasing; a new **Asking the User** convention block in the always-injected `using-superpowers` bootstrap carries the universal rule — prefer the harness's structured question tool, fall back to numbered plain-text options + STOP, and treat skipped/dismissed/auto-resolved answers as **no consent** (headless and auto modes fabricate answers on most harnesses, including Claude Code `-p`). The 3 destructive gates (finishing-a-development-branch, document-release, using-git-worktrees) carry self-contained consent lines; per-harness reference files gain quirk rows (Codex `request_user_input` plan-mode gate, Pi tool absence) and the factually wrong OpenCode "Not available" row is corrected (OpenCode ships a built-in `question` tool, default-on). A new `check-askuser-genericization.sh` guard in `just guards` enforces the invariant. Grounded in a 9-harness research sweep: 8 of 9 harnesses have a native structured-question tool under 7 different names.
+
 ### Fixed
 
 - Plan-to-bead creation now passes `bd lint` on first create: writing-plans' Task Structure gains an **Acceptance Criteria** block and all three creation sites (writing-plans, executing-plans, subagent-driven-development) instruct embedding the lint-required sections — `## Success Criteria` in epic descriptions, `## Acceptance Criteria` in task descriptions (or `--acceptance` in the sequential fallback). Previously an agent following the skills verbatim produced beads that failed the skills' own lint step.
