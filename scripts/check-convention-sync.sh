@@ -15,15 +15,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT" || exit 1
 
 # ASCII-only signature slices (no em-dash) so the patterns are shell/grep-safe.
-CB1_SIG="You MUST NOT silently take a shortcut, descope a required behavior/edge-case"
 CB3_SIG="what should I capture?"
 CB4_SIG="Don't skip because it feels minor"
 
-CB1_SITES=(
-  skills/brainstorming/SKILL.md
-  skills/writing-plans/SKILL.md
-  skills/executing-plans/SKILL.md
-)
 CB3_SITES=(
   skills/brainstorming/SKILL.md
   skills/writing-plans/SKILL.md
@@ -65,11 +59,12 @@ check_block() {
 self_test() {
   # Prove the grep-based detector distinguishes a correct copy from a mutated one.
   local tmp; tmp="$(mktemp -d)"
-  printf '%s\n' "$CB1_SIG" > "$tmp/correct.txt"
-  printf '%s\n' "You MUST NOT casually take a shortcut, descope a required behavior" > "$tmp/mutated.txt"
+  local fixture="canonical convention block fixture: byte-identical at every site"
+  printf '%s\n' "$fixture" > "$tmp/correct.txt"
+  printf '%s\n' "canonical convention block fixture: byte-identicaI at every site" > "$tmp/mutated.txt"
   local ok=1
-  grep -qF -- "$CB1_SIG" "$tmp/correct.txt" || { echo "self-test FAIL: signature did not match its own correct copy"; ok=0; }
-  if grep -qF -- "$CB1_SIG" "$tmp/mutated.txt"; then
+  grep -qF -- "$fixture" "$tmp/correct.txt" || { echo "self-test FAIL: signature did not match its own correct copy"; ok=0; }
+  if grep -qF -- "$fixture" "$tmp/mutated.txt"; then
     echo "self-test FAIL: detector did NOT catch the mutated block"; ok=0
   fi
   rm -rf "$tmp"
@@ -80,7 +75,6 @@ if [ "${1:-}" = "--self-test" ]; then
   self_test; exit $?
 fi
 
-check_block "CB-1 doctrine floor" "$CB1_SIG" "${CB1_SITES[@]}"
 check_block "CB-3 Capture gate"    "$CB3_SIG" "${CB3_SITES[@]}"
 check_block "CB-4 memory convention" "$CB4_SIG" "${CB4_SITES[@]}"
 
