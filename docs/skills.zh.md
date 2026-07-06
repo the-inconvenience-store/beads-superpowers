@@ -270,13 +270,10 @@ graph TD
 | 存储学习 | `bd remember "insight"` | {{ skill_count }} 个技能中的大多数会提示执行此操作 |
 | 附加证据 | `bd note <id> "context"` | verification |
 | 解释依赖 | `bd ready --explain` | systematic-debugging, executing-plans |
-| 原子批量操作 | `bd batch` (stdin) | SDD, executing-plans, finishing-branch |
-| 跨 worktree 操作 | `bd -C <path> <cmd>` | using-git-worktrees, SDD |
-| 检查问题章节 | `bd lint [id...]` | writing-plans（自我审查） |
-| 推迟工作 | `bd defer <id> --until="<date>"` | executing-plans |
-| 标记人工决策 | `bd human <id>` | executing-plans |
-| 验证并行就绪状态 | `bd swarm validate <epic>` | SDD（并行批处理） |
 | 同步到远端 | `bd dolt push` | finishing-a-development-branch |
+
+!!! info "深入了解 — 上游 Beads 文档"
+    - [CLI 参考](https://gastownhall.github.io/beads/cli-reference) — 超出上表工作流核心集的完整 `bd` 命令（`batch`、`lint`、`defer`、`human`、`swarm`、`-C` 等）
 
 ## 技能链式调用
 

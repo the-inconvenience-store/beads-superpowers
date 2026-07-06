@@ -268,13 +268,10 @@ Skills use `bd` commands to track work. Only the orchestrating agent manages bea
 | Store learning | `bd remember "insight"` | most of the {{ skill_count }} skills prompt for this |
 | Attach evidence | `bd note <id> "context"` | verification |
 | Explain dependencies | `bd ready --explain` | systematic-debugging, executing-plans |
-| Atomic batch ops | `bd batch` (stdin) | SDD, executing-plans, finishing-branch |
-| Cross-worktree ops | `bd -C <path> <cmd>` | using-git-worktrees, SDD |
-| Lint issue sections | `bd lint [id...]` | writing-plans (self-review) |
-| Defer work | `bd defer <id> --until="<date>"` | executing-plans |
-| Flag for human decision | `bd human <id>` | executing-plans |
-| Validate parallel readiness | `bd swarm validate <epic>` | SDD (parallel batch) |
 | Sync to remote | `bd dolt push` | finishing-a-development-branch |
+
+!!! info "Go deeper — upstream Beads docs"
+    - [CLI reference](https://gastownhall.github.io/beads/cli-reference) — the full `bd` command surface beyond the workflow-core set above (`batch`, `lint`, `defer`, `human`, `swarm`, `-C`, …)
 
 ## How skills chain
 
