@@ -92,7 +92,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `decisions/` — Architecture Decision Records (ADRs). Local working docs (gitignored).
 - `.internal/` — Working docs (gitignored): specs from brainstorming, plans from writing-plans, research output, audits, reference docs, `.internal/sdd/` (SDD scratch), and `.internal/brainstorm/` (brainstorm server sessions).
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
-- `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent).
+- `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `build-docs.sh`, `check-agent-bead-stamp.sh`, `check-zh-docs.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 6 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi).
 - `mkdocs.yml` + `main.py` + `mkdocs_hooks.py` — MkDocs Material site config, macros plugin, and i18n language-switcher hook.
 
@@ -179,6 +179,7 @@ scripts/
   check-convention-sync.sh   # Verify shared convention blocks are byte-identical across skills
   lint-shell.sh              # Shellcheck gate over tracked .sh (baseline + visible-SKIP)
   lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
+  check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
 skills/                    # beads-native skills (auto-discovered, each has SKILL.md)
 tests/                     # Test infrastructure (deterministic suites via `just`; 4 LLM suites deprecated in place)
 install.sh                 # curl installer — 3-tier fallback (plugin → npx → tarball/git), checksums, atomic rollback
@@ -283,7 +284,8 @@ Pre-commit covers commit-time hygiene; nothing here is CI-enforced by design.
 ```bash
 just            # = just check: guards + hooks + manifests + contracts + shape
 just guards     # all guard scripts (todowrite, bead-stamp, zh-docs, convention-sync,
-                #   skill-count + KNOWN_SKILLS drift, version sync, frontmatter, shell lint)
+                #   skill-count + KNOWN_SKILLS drift, version sync, frontmatter, shell lint,
+                #   askuser-genericization)
 just lint       # shellcheck gate alone (tracked .sh, baseline'd; SKIPs if shellcheck absent)
 just hooks      # tests/hooks/* (node tests SKIP visibly if node absent)
 just shape      # install-shape: 9 harnesses (Tier A full artifacts; Tier B hint+manifest)
