@@ -18,6 +18,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 **Context:** This should be run in a dedicated worktree (created by brainstorming skill).
 
 **Save graph plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.graph.json`
+
 - (User preferences for graph location override this default)
 
 ## Scope Check
@@ -49,6 +50,7 @@ In beads terms, a right-sized task is one bead (`bd create -t task --parent <epi
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
+
 - "Write the failing test" - step
 - "Run it to make sure it fails" - step
 - "Implement the minimal code to make the test pass" - step
@@ -86,13 +88,12 @@ Write a bd graph JSON file with one epic node, one task node per task, and depen
       "description": "<summary>\n\n## Context\n- Spec: `docs/specs/<spec-file>.md`\n- External ref: <GitHub/Jira/Linear/URL or \"None\">\n- Why this task exists: <requirement, user need, or risk it resolves>\n- Relevant constraints: <compatibility, security, performance, migration, repo conventions>\n\n## Files\n- Modify: `exact/path/to/file.py`\n- Test: `tests/exact/path/to/test.py`\n\n## Interfaces\n- Consumes: <outputs from Task 1>\n- Produces: <exact signatures and types>\n\n## Acceptance Criteria\n- <observable, testable outcome>\n\n## Skills\n- <skill-name>: use when <trigger>; helps because <task-specific reason>\n\n## Steps\n1. Write the failing test: <exact test code or command>\n2. Run it to verify it fails: `<command>`; expected: <failure>\n3. Implement the minimal code: <exact code or file edits>\n4. Run it to verify it passes: `<command>`; expected: PASS\n5. Commit: `git add ... && git commit -m \"...\"`"
     }
   ],
-  "edges": [
-    {"from_key": "t2", "to_key": "t1", "type": "blocks"}
-  ]
+  "edges": [{ "from_key": "t2", "to_key": "t1", "type": "blocks" }]
 }
 ```
 
 **Graph contract:**
+
 - `key` values are stable within the file (`epic1`, `t1`, `t2`, ...).
 - Every task node has `parent_key: "epic1"`.
 - Edge direction: `from_key` is the dependent task; `to_key` is the prerequisite task. `{"from_key":"t2","to_key":"t1","type":"blocks"}` means Task 2 waits for Task 1.
@@ -130,16 +131,12 @@ Use skill names only; do not use `@` links or file paths that force-load skill b
 
 ```markdown
 ## Skills
+
 - beads-superpowers:test-driven-development: use before implementation; this task changes behavior and needs a failing test first.
 - beads-superpowers:systematic-debugging: use if the regression test fails for an unexpected reason; this task touches flaky initialization code.
 ```
 
-If no task-specific skill applies, write:
-
-```markdown
-## Skills
-- None beyond the session's required startup skills.
-```
+If no task-specific skill applies, do not include the Skills section.
 
 ## Create Beads
 
@@ -164,6 +161,7 @@ Record the created epic ID and child task IDs from the command output. If `--gra
 ## No Placeholders
 
 Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" / "add validation" / "handle edge cases"
 - "Write tests for the above" (without actual test code)
@@ -172,6 +170,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - References to types, functions, or methods not defined in any task
 
 ## Remember
+
 - Exact file paths always
 - Complete code in every step — if a step changes code, show the code
 - Exact commands with expected output
@@ -203,20 +202,32 @@ After self-review passes, summarize the created epic and task beads, then gate p
 
 ```json
 {
-  "questions": [{
-    "question": "Plan beads created under `<epic-id>`. Review the task breakdown and let me know how to proceed.",
-    "header": "Plan review",
-    "options": [
-      {"label": "Approved + stress-test (Recommended)", "description": "Plan looks good — run an adversarial stress-test before execution"},
-      {"label": "Approved", "description": "Plan looks good — skip stress-test and proceed to choose execution method"},
-      {"label": "Needs changes", "description": "I want to revise the plan before proceeding"}
-    ],
-    "multiSelect": false
-  }]
+  "questions": [
+    {
+      "question": "Plan beads created under `<epic-id>`. Review the task breakdown and let me know how to proceed.",
+      "header": "Plan review",
+      "options": [
+        {
+          "label": "Approved + stress-test (Recommended)",
+          "description": "Plan looks good — run an adversarial stress-test before execution"
+        },
+        {
+          "label": "Approved",
+          "description": "Plan looks good — skip stress-test and proceed to choose execution method"
+        },
+        {
+          "label": "Needs changes",
+          "description": "I want to revise the plan before proceeding"
+        }
+      ],
+      "multiSelect": false
+    }
+  ]
 }
 ```
 
 Route on the answer:
+
 - **Approved + stress-test** → invoke the `stress-test` skill with the epic bead ID and graph JSON path as the target; when it completes, proceed to **Execution Handoff**.
 - **Approved** → proceed to **Execution Handoff** directly.
 - **Needs changes** → update the graph JSON and beads, then re-run the self-review. Only proceed once approved.
@@ -227,17 +238,31 @@ After the work is settled, present the Capture gate (you MUST present it; the us
 
 ```json
 {
-  "questions": [{
-    "question": "This produced something worth preserving — what should I capture?",
-    "header": "Capture",
-    "options": [
-      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
-      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
-      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
-      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
-    ],
-    "multiSelect": false
-  }]
+  "questions": [
+    {
+      "question": "This produced something worth preserving — what should I capture?",
+      "header": "Capture",
+      "options": [
+        {
+          "label": "ADR + memory",
+          "description": "Record an ADR for the decision AND a durable bd-remember memory"
+        },
+        {
+          "label": "ADR only",
+          "description": "Record an ADR for the architecturally-significant decision"
+        },
+        {
+          "label": "Memory only",
+          "description": "Capture a durable lesson/insight via bd remember"
+        },
+        {
+          "label": "Skip",
+          "description": "Nothing here is durable enough to preserve"
+        }
+      ],
+      "multiSelect": false
+    }
+  ]
 }
 ```
 
@@ -249,30 +274,34 @@ After the plan is approved, **use your structured question tool** to offer the e
 
 ```json
 {
-  "questions": [{
-    "question": "Plan beads are ready. How would you like to execute them?",
-    "header": "Execution",
-    "options": [
-      {
-        "label": "Subagent-Driven (Recommended)",
-        "description": "Fresh subagent per task with a single task review between tasks — fast iteration, high quality"
-      },
-      {
-        "label": "Inline Execution",
-        "description": "Execute tasks in this session using executing-plans — batch execution with checkpoints"
-      }
-    ],
-    "multiSelect": false
-  }]
+  "questions": [
+    {
+      "question": "Plan beads are ready. How would you like to execute them?",
+      "header": "Execution",
+      "options": [
+        {
+          "label": "Subagent-Driven (Recommended)",
+          "description": "Fresh subagent per task with a single task review between tasks — fast iteration, high quality"
+        },
+        {
+          "label": "Inline Execution",
+          "description": "Execute tasks in this session using executing-plans — batch execution with checkpoints"
+        }
+      ],
+      "multiSelect": false
+    }
+  ]
 }
 ```
 
 **If Subagent-Driven chosen:**
+
 - **REQUIRED SUB-SKILL:** Use beads-superpowers:subagent-driven-development
 - Pass the epic bead ID and graph JSON path forward
 - Fresh subagent per task + single task review (spec + quality verdicts)
 
 **If Inline Execution chosen:**
+
 - **REQUIRED SUB-SKILL:** Use beads-superpowers:executing-plans
 - Pass the epic bead ID and graph JSON path forward
 - Batch execution with checkpoints for review
@@ -282,6 +311,7 @@ After the plan is approved, **use your structured question tool** to offer the e
 **Called by:** **brainstorming** — this is brainstorming's terminal state. After design approval, brainstorming invokes writing-plans.
 
 **Invokes:**
+
 - **subagent-driven-development** — execution handoff (user choice).
 - **executing-plans** — execution handoff (user choice).
 
