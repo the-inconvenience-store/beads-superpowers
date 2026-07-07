@@ -20,6 +20,8 @@ decisions/
 SESSION-SUMMARY.md
 .sessions/
 .claude/session-log.jsonl
+# Local hook/permission settings — hook is registered globally; a tracked copy double-injected (beads-superpowers-jb3u)
+.claude/settings.json
 
 # Dependencies
 node_modules/
