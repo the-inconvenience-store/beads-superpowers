@@ -33,35 +33,20 @@ This Iron Law is the Production-Grade Doctrine applied to your data ledger: neve
 Before taking ANY action, run diagnostics to understand the current state:
 
 ```bash
-# 1. Check prerequisites
-bd version                          # Must be >= 1.0.0
-dolt version 2>/dev/null            # Optional but helpful
-
-# 2. Check if .beads/ exists
-ls -la .beads/ 2>/dev/null
-
-# 3. Check database config
-cat .beads/config.yaml 2>/dev/null
-cat .beads/metadata.json 2>/dev/null
-
-# 4. Test if database is functional
-bd list 2>/dev/null
-
-# 5. Check commit history
-bd vc log 2>/dev/null | head -5
-
-# 6. Check if remote has beads data
-git ls-remote origin 2>/dev/null | grep dolt
-
-# 7. Check registered remotes
-bd dolt remote list 2>/dev/null
-
-# 8. Run automated diagnostics
-bd doctor --fix --yes 2>/dev/null
-
-# 9. Migration-content skew vs remote (bd v1.1.0+): bd doctor flags clones that applied
-#    different content for the same migration version — surface it before any sync work.
+bash scripts/diagnose.sh
 ```
+
+One Bash call gathers the full read-only battery as labeled RAW DATA (no verdicts, no
+fixes): `bd`/`dolt` versions, `.beads/` presence, `config.yaml`/`metadata.json`, whether
+`bd list`/`bd vc log` work, and any dolt refs on the git remote. Read the `== section ==`
+output, then author the diagnosis yourself against the Decision Matrix below:
+
+**Diagnosis:** <one-line read of what the sections above show>
+**Path:** <A/B/C/D/E/F, from the Decision Matrix>
+
+`bd doctor` is intentionally NOT part of the battery — `--fix --yes` can mutate. Run it only
+after the diagnosis→path block above is emitted and a path is chosen (bd v1.1.0+ `bd doctor`
+also flags migration-content skew vs remote; surface that before any sync work).
 
 > **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
 > `bd show --short <id>` to skim (full `bd show` only when the body is needed),
