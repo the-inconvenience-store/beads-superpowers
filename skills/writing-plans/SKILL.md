@@ -75,7 +75,7 @@ Write a bd graph JSON file with one epic node, one task node per task, and depen
       "type": "task",
       "priority": 2,
       "parent_key": "epic1",
-      "description": "<summary>\n\n## Files\n- Create: `exact/path/to/file.py`\n- Modify: `exact/path/to/existing.py:123`\n- Test: `tests/exact/path/to/test.py`\n\n## Interfaces\n- Consumes: <exact signatures and types>\n- Produces: <exact signatures and types>\n\n## Acceptance Criteria\n- <observable, testable outcome>\n\n## Steps\n1. Write the failing test: <exact test code or command>\n2. Run it to verify it fails: `<command>`; expected: <failure>\n3. Implement the minimal code: <exact code or file edits>\n4. Run it to verify it passes: `<command>`; expected: PASS\n5. Commit: `git add ... && git commit -m \"...\"`"
+      "description": "<summary>\n\n## Context\n- Spec: `docs/specs/<spec-file>.md`\n- External ref: <GitHub/Jira/Linear/URL or \"None\">\n- Why this task exists: <requirement, user need, or risk it resolves>\n- Relevant constraints: <compatibility, security, performance, migration, repo conventions>\n\n## Files\n- Create: `exact/path/to/file.py`\n- Modify: `exact/path/to/existing.py:123`\n- Test: `tests/exact/path/to/test.py`\n\n## Interfaces\n- Consumes: <exact signatures and types>\n- Produces: <exact signatures and types>\n\n## Acceptance Criteria\n- <observable, testable outcome>\n\n## Skills\n- <skill-name>: use when <trigger>; helps because <task-specific reason>\n\n## Steps\n1. Write the failing test: <exact test code or command>\n2. Run it to verify it fails: `<command>`; expected: <failure>\n3. Implement the minimal code: <exact code or file edits>\n4. Run it to verify it passes: `<command>`; expected: PASS\n5. Commit: `git add ... && git commit -m \"...\"`"
     },
     {
       "key": "t2",
@@ -83,7 +83,7 @@ Write a bd graph JSON file with one epic node, one task node per task, and depen
       "type": "task",
       "priority": 2,
       "parent_key": "epic1",
-      "description": "<summary>\n\n## Files\n- Modify: `exact/path/to/file.py`\n- Test: `tests/exact/path/to/test.py`\n\n## Interfaces\n- Consumes: <outputs from Task 1>\n- Produces: <exact signatures and types>\n\n## Acceptance Criteria\n- <observable, testable outcome>\n\n## Steps\n1. Write the failing test: <exact test code or command>\n2. Run it to verify it fails: `<command>`; expected: <failure>\n3. Implement the minimal code: <exact code or file edits>\n4. Run it to verify it passes: `<command>`; expected: PASS\n5. Commit: `git add ... && git commit -m \"...\"`"
+      "description": "<summary>\n\n## Context\n- Spec: `docs/specs/<spec-file>.md`\n- External ref: <GitHub/Jira/Linear/URL or \"None\">\n- Why this task exists: <requirement, user need, or risk it resolves>\n- Relevant constraints: <compatibility, security, performance, migration, repo conventions>\n\n## Files\n- Modify: `exact/path/to/file.py`\n- Test: `tests/exact/path/to/test.py`\n\n## Interfaces\n- Consumes: <outputs from Task 1>\n- Produces: <exact signatures and types>\n\n## Acceptance Criteria\n- <observable, testable outcome>\n\n## Skills\n- <skill-name>: use when <trigger>; helps because <task-specific reason>\n\n## Steps\n1. Write the failing test: <exact test code or command>\n2. Run it to verify it fails: `<command>`; expected: <failure>\n3. Implement the minimal code: <exact code or file edits>\n4. Run it to verify it passes: `<command>`; expected: PASS\n5. Commit: `git add ... && git commit -m \"...\"`"
     }
   ],
   "edges": [
@@ -97,14 +97,55 @@ Write a bd graph JSON file with one epic node, one task node per task, and depen
 - Every task node has `parent_key: "epic1"`.
 - Edge direction: `from_key` is the dependent task; `to_key` is the prerequisite task. `{"from_key":"t2","to_key":"t1","type":"blocks"}` means Task 2 waits for Task 1.
 - The graph schema has no separate criteria field. `bd lint` requires `## Success Criteria` in the epic's `description` and `## Acceptance Criteria` in each task's `description`.
-- Put all implementation detail in task descriptions. A task's implementer sees only that bead; include files, interfaces, exact test commands, exact expected outputs, and concrete steps.
+- The graph schema does not import separate `acceptance`, `context`, `skills`, `spec-id`, or `external-ref` fields. Put them in markdown sections inside `description`.
+- Put all implementation detail in task descriptions. A task's implementer sees only that bead; include context, files, interfaces, exact test commands, exact expected outputs, skills to use, and concrete steps.
+
+## Description Sections
+
+### Acceptance Criteria
+
+Write acceptance criteria as externally observable outcomes, not implementation chores.
+
+- Start each bullet with a verifiable result: "Given/When/Then", "The command returns...", "The UI shows...", "The API rejects...".
+- Include success and important failure cases from the spec.
+- Tie each criterion to a test, command, lint check, or user-visible behavior.
+- Avoid vague criteria such as "works correctly", "handles edge cases", "is robust", or "tests are added".
+
+### Context
+
+Use `## Context` to preserve the fields the graph importer cannot store separately.
+
+- `Spec:` exact path to the spec or requirements document.
+- `External ref:` issue URL, ticket ID, design doc URL, upstream PR, or `None`.
+- `Why this task exists:` the requirement, user need, bug, risk, or dependency this bead satisfies.
+- `Relevant constraints:` security rules, compatibility requirements, migrations, performance budgets, feature flags, repo conventions, and upstream decisions the implementer must not rediscover.
+
+Context should explain why the task exists and what boundaries matter. Put instructions for changing code in `## Steps`, not here.
+
+### Skills
+
+Before writing task descriptions, inspect the skills available in the current agent environment. For each task, include a `## Skills` section listing every skill that would materially help that task.
+
+Use skill names only; do not use `@` links or file paths that force-load skill bodies. Each bullet states when to invoke the skill and why it matters for this task:
+
+```markdown
+## Skills
+- beads-superpowers:test-driven-development: use before implementation; this task changes behavior and needs a failing test first.
+- beads-superpowers:systematic-debugging: use if the regression test fails for an unexpected reason; this task touches flaky initialization code.
+```
+
+If no task-specific skill applies, write:
+
+```markdown
+## Skills
+- None beyond the session's required startup skills.
+```
 
 ## Create Beads
 
 After writing the graph JSON file, create the beads before asking for review:
 
 ```bash
-bd create --graph docs/plans/YYYY-MM-DD-<feature-name>.graph.json --dry-run
 bd create --graph docs/plans/YYYY-MM-DD-<feature-name>.graph.json
 ```
 
