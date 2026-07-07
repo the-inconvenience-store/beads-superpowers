@@ -17,7 +17,7 @@ b bd version   || echo "bd: UNAVAILABLE (install: https://github.com/gastownhall
 b dolt version || echo "dolt: UNAVAILABLE (embedded mode needs no separate dolt binary)"
 
 echo "== beads-dir =="
-if [ -d .beads ]; then b ls -la .beads/; else echo ".beads/: ABSENT (fresh init candidate)"; fi
+if [ -d .beads ]; then b ls -la .beads/; else echo ".beads/: ABSENT"; fi
 
 echo "== config =="
 b cat .beads/config.yaml   || echo "config.yaml: UNAVAILABLE"
