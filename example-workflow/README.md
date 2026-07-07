@@ -42,7 +42,7 @@ Finish      → finishing-a-development-branch   (owns Land-the-Plane)
 
 Trivial edits skip the heavyweight ceremony (worktree / doc audit / PR) but still require verification; quick questions are answered directly. See `agents/yegge.md` for the triage table and full skill index.
 
-The `CLAUDE.md` provides behavioral guardrails (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) plus beads integration context. `bd prime` injects dynamic beads state at session start.
+The `CLAUDE.md` provides behavioral guardrails (Think Before Coding, Simplicity First, Surgical Changes, Goal-Driven Execution) plus beads integration context. The plugin's session hook injects composed beads state (curated memories + a `bd prime` pointer) at session start.
 
 ## Customization
 

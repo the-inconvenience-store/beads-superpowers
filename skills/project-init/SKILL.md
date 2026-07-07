@@ -299,7 +299,7 @@ bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / patt
 ## Integration
 
 **Called by:**
-- SessionStart hook — when `bd prime` fails
+- SessionStart hook — when beads context injection fails (or a manual `bd prime` fails)
 - Any workflow where `bd` commands return database errors
 
 **Pairs with:**

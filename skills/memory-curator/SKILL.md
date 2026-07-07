@@ -56,8 +56,8 @@ dedup); cross-cluster consolidation and pruning come after, and only where clear
    fact ONLY if it carries checkable evidence (cited `file:line`,
    passing test, command output, closed bead) — the same bar as Agent-Filed Bead Discipline in
    `verification-before-completion`. No evidence → drop, or store at low `@salience`. Procedural how-to
-   → flag for a skill, don't store. **Never persist secrets, credentials, tokens, keys, or PII** — `bd prime` injects every
-   memory into future sessions and Dolt history outlives `bd forget`.
+   → flag for a skill, don't store. **Never persist secrets, credentials, tokens, keys, or PII** — the session hook
+   injects curated memories into every future session (the full store via `bd prime`) and Dolt history outlives `bd forget`.
 3. **Reconcile** — ADD new facts; UPDATE a same-topic memory in place with `bd remember --key <existing>`,
    merging so the result keeps the MOST information (never silently shrink); skip what's already present.
 4. **Consolidate** — collapse a themed cluster of **episodic** memories into one timeless **semantic**
@@ -70,8 +70,8 @@ dedup); cross-cluster consolidation and pruning come after, and only where clear
    active handoff. Reserve hard `bd forget` for exact duplicates or true noise, with a cited reason.
 
 ## Iron rule: propose, then apply
-This mutates the store `bd prime` injects into every future session — a bad run corrupts the context
-layer invisibly. So:
+This mutates the store injected into every future session (curated by the session hook, in full via
+`bd prime`) — a bad run corrupts the context layer invisibly. So:
 
 - Emit the full planned command list — every ADD / UPDATE / CONSOLIDATE / FORGET with a one-line reason —
   and get the user's approval before running ANY of it. The on-demand sweep is dry-run-first, always.

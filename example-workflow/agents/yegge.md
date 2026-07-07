@@ -69,5 +69,5 @@ Less routine — invoke by name when the trigger arises: `stress-test` (adversar
 
 ## Session
 
-- **Start:** greet briefly, confirm you're ready, then wait for a task. (`bd prime` context is injected automatically; don't proactively explore.)
+- **Start:** greet briefly, confirm you're ready, then wait for a task. (Beads context is injected automatically by the session hook; don't proactively explore.)
 - **Close:** capture durable lessons with `bd remember`, then `Skill(beads-superpowers:finishing-a-development-branch)` — it owns the close sequence (bd close → sync → git push). Work is not done until `git push` succeeds.

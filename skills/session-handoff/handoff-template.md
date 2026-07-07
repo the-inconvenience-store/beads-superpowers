@@ -1,6 +1,7 @@
 # Session Handoff — <YYYY-MM-DD> — <topic>
 
-> **Read this FIRST on resume**, then run `bd prime`. This file + the continuation
+> **Read this FIRST on resume.** The session hook already injected beads context automatically;
+> if no `<beads-context>` block is visible, run `bd prime`. This file + the continuation
 > memory give full orientation. Gitignored (`.internal/`), local-only.
 
 ## Current State (TL;DR)
@@ -30,7 +31,7 @@
 - Uncommitted/unpushed, in-flight, deferred, separate-repo notes.
 
 ## How to Resume
-1. `bd prime` (auto on session start). 2. Read this file. 3. `bd ready`. 4. <next>.
+1. Beads context already injected by the session hook (if missing, run `bd prime`). 2. Read this file. 3. `bd ready`. 4. <next>.
 
 ## Suggested Skills
 - <skill the next session should invoke and why>.

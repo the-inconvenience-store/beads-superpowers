@@ -65,7 +65,6 @@ echo "tracked=$TRACKED beads=$HAS_BEADS git=$HAS_GIT"
 
 Issue all of these commands in **one message, multiple Bash tool calls in parallel**:
 
-- `bd prime`
 - `bd ready`
 - `bd blocked`
 - `bd query "status=open"` and `bd query "status=in_progress"` — two separate calls (bd v1.0.5 silently drops rows when `OR` spans status clauses — never combine these into one `OR` query)
@@ -73,6 +72,9 @@ Issue all of these commands in **one message, multiple Bash tool calls in parall
 - `bd stats`
 - `bd count --by-status` — ledger counts grouped by status; feeds the Phase 4 "Beads ledger" line
 - `bd count --by-priority` — open-work priority breakdown
+
+`bd prime` is NOT re-run here — the session hook already injected composed beads context. If it did
+not (no `<beads-context>` block visible), run `bd prime` once before Phase 1.
 
 If `bd` is not installed or `.beads/` is missing, skip Phase 1 entirely and emit "**Beads:** not installed/initialized — skipped" in the Phase 4 summary.
 
@@ -294,7 +296,7 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 | Thought | Reality |
 |---|---|
 | "I already explored this last session" | Sessions don't carry state. Re-orient. |
-| "I'll skip beads commands — I'll use TodoWrite" | This project IS beads. `bd prime` is mandatory. TodoWrite is forbidden. |
+| "I'll skip beads commands — I'll use TodoWrite" | This project IS beads. Beads context is mandatory — the session hook injects it, or run `bd prime` if it didn't. TodoWrite is forbidden. |
 | "The README is enough" | README skips beads state, open work, and known issues. Run the full pipeline. |
 | "I'll skip Phase 3 — looking at open beads is busywork" | Phase 3 is what surfaces "this Dolt setup is broken" before you waste 20 minutes on it. |
 | "I'll auto-claim the top P0" | Forbidden. Orient and stop. User drives. |
@@ -303,7 +305,7 @@ These thoughts mean STOP — you're rationalizing skipping orientation:
 | "I'll tag confidence later" | An inferred claim without a glyph + source is an unverified guess. Tag inline. |
 | "Beads and git probably agree" | Run the continuity check. A shipped-but-still-open bead is exactly what it catches. |
 | "I'll suggest they start the top bead" | Suggest the *skill*; don't claim or begin. The terminal contract is absolute. |
-| "I'll skip the handoff — `bd prime` covers it" | The handoff doc holds the narrative thread (WIP, decisions, loose threads) that `bd prime` does not. Read it. |
+| "I'll skip the handoff — `bd prime` covers it" | The handoff doc holds the narrative thread (WIP, decisions, loose threads) that beads context does not. Read it. |
 | "`bd ready --claim` is efficient" | It's a consent violation here. Terminal contract wins — orient and stop. |
 
 ## Output Contract
