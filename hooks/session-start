@@ -33,7 +33,10 @@ bsp_compose_memories() {
     [ -z "$listing" ] && return 0
     total_count=$(printf '%s\n' "$listing" | grep -cE '^[[:space:]]*"[^"]+":' || true)
 
-    if ! printf '%s\n' "$listing" | grep -q '@salience='; then
+    # Pure-bash probe — a `printf | grep -q` pipeline here SIGPIPEs under
+    # pipefail when the listing exceeds the 64KB pipe buffer and matches early
+    # (grep exits, printf's next write dies 141), misfiring this branch.
+    if [[ "$listing" != *"@salience="* ]]; then
         printf '## Persistent Memories\n\n%s memories stored, none curated yet — ' "$total_count"
         printf 'run the memory-curator curation sweep to choose what is ambient. '
         # shellcheck disable=SC2016  # backticks are literal markdown code-format markers, not expansions
@@ -136,7 +139,11 @@ fi
 
 # --- bd prime safety net: lean override where the composer owns injection ---
 if command -v bd >/dev/null 2>&1 && [ -d .beads ] && [ ! -e .beads/PRIME.md ] && [ ! -L .beads/PRIME.md ]; then
-    if ! bd config show 2>/dev/null | grep -Eq 'custom\.prime-safety-net[[:space:]]*=[[:space:]]*false'; then
+    # Same class as the salience probe: `<output> | grep -q` under pipefail is
+    # SIGPIPE-prone — capture then match in bash (same ERE, no pipe).
+    bsp_cfg=$(bd config show 2>/dev/null) || bsp_cfg=""
+    bsp_net_off='custom\.prime-safety-net[[:space:]]*=[[:space:]]*false'
+    if ! [[ "$bsp_cfg" =~ $bsp_net_off ]]; then
         cat > .beads/PRIME.md <<'NET' || true
 <!-- Written by the beads-superpowers plugin (safety net).
      Your session hook injects a curated beads context, so `bd prime` here

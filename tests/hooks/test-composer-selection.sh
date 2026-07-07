@@ -87,4 +87,24 @@ echo "$out" | grep -q "SHORT CONT BODY" || { echo "FAIL: continuation clipped in
 echo "$out" | grep -q "more core memories over budget" || { echo "FAIL: multi-byte body not clipped — ceiling counted chars, not bytes"; exit 1; }
 echo "$out" | grep -q "core memories: 1 of 2 injected" || { echo "FAIL: byte-test disclosure wrong"; exit 1; }
 
+# 6. large-store pipefail regression: listing > 64KB pipe buffer with an EARLY
+# @salience match. A `printf | grep -q` probe under pipefail takes SIGPIPE
+# (grep -q exits at first match, printf keeps writing) -> pipeline exit 141 ->
+# pre-sweep branch misfires despite curated entries. Fixture: ~246KB (2000
+# filler lines of ~120B), @salience=5 on line 2 — reproduces reliably.
+{
+    echo '{'
+    echo '  "salient-early": "@type=semantic:lesson @created=2026-07-07 @salience=5 early salient body",'
+    pad=$(printf 'x%.0s' {1..80})
+    for i in $(seq 1 2000); do
+        printf '  "filler-%04d": "plain filler body %04d %s",\n' "$i" "$i" "$pad"
+    done
+    echo '  "filler-last": "plain tail body"'
+    echo '}'
+} > "$TMP/fixtures/memories.json"
+printf 'EARLY SALIENT FULL BODY\n' > "$TMP/fixtures/recall-salient-early.txt"
+out=$(bsp_compose_memories 8192)
+echo "$out" | grep -q "curation sweep" && { echo "FAIL: pre-sweep misfired on large store (pipefail SIGPIPE)"; exit 1; }
+echo "$out" | grep -q "EARLY SALIENT FULL BODY" || { echo "FAIL: salient body absent from large-store composition"; exit 1; }
+
 echo "PASS: composer selection/ceiling"
