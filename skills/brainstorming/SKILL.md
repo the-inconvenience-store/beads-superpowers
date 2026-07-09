@@ -27,7 +27,7 @@ The session bead always stays permanent (it's the audit trail). Graph JSON nodes
 
 1. **Explore project context** — check files, docs, recent commits
 2. **Offer the visual companion just-in-time** — NOT upfront. The first time a question would genuinely be clearer shown than described, offer it then (its own message); on approval its browser tab opens for you. If no visual question ever arises, never offer it. See the Visual Companion section below.
-3. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
+3. **Restate the goal, then ask clarifying questions** — open with a one-sentence goal restatement, then one question at a time on purpose/constraints/success criteria
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation
 5. **Present design** — in sections scaled to their complexity, get user approval after each section
 6. **Write design doc** — save to `docs/specs/YYYY-MM-DD-<topic>-design.md` and commit
@@ -75,6 +75,7 @@ digraph brainstorming {
 **Understanding the idea:**
 
 - Check out the current project state first (files, docs, recent commits)
+- **Restate the real goal before the first question.** Open your first questioning message with one sentence: `Goal as I understand it: <what changes in the user's world if this succeeds, and what they'll do with it>`. The literal request is a lossy compression of that goal — look for the decision hiding behind the question and the audience who isn't the asker. If writing the sentence feels like a guess, your first clarifying question resolves that guess — one sharp question, not five. A wrong restatement caught here is cheap; a perfect design for the wrong goal is the most expensive failure available.
 - Search for prior decisions or design memories touching the feature area before asking detailed questions: `bd memories <keyword>`.
 
 > **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
@@ -229,6 +230,7 @@ Route on the answer:
 ## Key Principles
 
 - **One question at a time** - Don't overwhelm with multiple questions
+- **Restate before you refine** - The goal restatement opens every brainstorm; questions refine it, never replace it
 - **Multiple choice preferred** - Easier to answer than open-ended when possible
 - **YAGNI ruthlessly** - Remove unnecessary *speculative* features from all designs (never drop a required behavior, edge case, or security control — that is descoping, not YAGNI)
 - **Explore alternatives** - Always propose 2-3 approaches before settling
