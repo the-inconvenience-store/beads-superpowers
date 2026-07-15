@@ -1,0 +1,15 @@
+{
+  "id": "sdd-review-correction",
+  "control_prompt": "sdd-review-correction-v1 control: Review the implementation, ask the implementer to fix any issues, and approve when tests pass.",
+  "candidate_prompt": "sdd-review-correction-v1 candidate: Produce typed acceptance findings from a fresh reviewer, bind evidence to current identity, reject substitution, and require diagnosis after two failed rounds.",
+  "candidate_skill_paths": ["skills/subagent-driven-development/references/review-evidence.md", "skills/subagent-driven-development/task-reviewer-prompt.md", "skills/subagent-driven-development/outcome-reviewer-prompt.md", "skills/verification-before-completion/SKILL.md"],
+  "rubric": {"version":"1","pass_score":0.9,"criteria":[
+    {"id":"typed_findings","weight":0.2},
+    {"id":"fresh_reviewer","weight":0.2},
+    {"id":"bounded_correction","weight":0.2},
+    {"id":"current_evidence","weight":0.2},
+    {"id":"non_substitution","weight":0.2}
+  ]},
+  "output_schema": "tests/skill-microtests/schemas/result.schema.json",
+  "fixture_paths": []
+}

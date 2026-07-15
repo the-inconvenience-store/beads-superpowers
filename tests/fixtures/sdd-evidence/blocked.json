@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "current": {"commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+  "task_gate": {"required_acceptance":{"TASK-A":"unit","TASK-B":"integration"},"review":{"kind":"task","result":"PASS","reviewer_context_id":"fresh-task-reviewer","report_path":".internal/sdd/task-review.json","commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}},
+  "epic_gate": {"required_acceptance":{"OUT-A":"outcome-live"},"review":{"kind":"outcome","result":"PASS","reviewer_context_id":"fresh-outcome-reviewer","report_path":".internal/sdd/outcome-review.json","commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}},
+  "evidence": [
+    {"acceptance_id":"TASK-A","evidence_class":"unit","result":"BLOCKED","command_or_flow":"bash tests/unit.sh","observed_at":"2026-07-15T10:00:00Z","artifact":".internal/evidence/unit.txt","commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    {"acceptance_id":"TASK-B","evidence_class":"integration","result":"UNTESTED","command_or_flow":"integration environment unavailable","observed_at":"2026-07-15T10:01:00Z","artifact":".internal/evidence/integration.txt","commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+    {"acceptance_id":"OUT-A","evidence_class":"outcome-live","result":"FAIL","command_or_flow":"run persona journey","observed_at":"2026-07-15T10:02:00Z","artifact":".internal/evidence/outcome.txt","commit":"1111111111111111111111111111111111111111","contract_hash":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","environment":"codex:macos:isolated","fixture_hash":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}
+  ],
+  "review_rounds": [],
+  "diagnostic": null
+}

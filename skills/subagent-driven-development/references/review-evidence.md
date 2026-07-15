@@ -1,61 +1,74 @@
 # Review and Evidence
 
-Load this reference after an implementer reports or when correcting a finding. Reviews consume bounded artifacts, not the controller's transcript.
+Load this reference after an implementer reports, when a reviewer returns findings, or before task/epic closure.
 
-## File Handoffs
+## Bounded Inputs
 
-- Task requirements live in the bead description.
-- The Context Manifest lives at `.internal/sdd/<task-id>-manifest.json` in the task worktree.
-- The implementer writes its full report to the manifest's `report_path`.
-- The controller persists the report as a task comment immediately after return.
-- `scripts/review-package <BASE> <HEAD>` creates the bounded commit log, stat, and diff. `BASE` is the commit captured before implementation, never an assumed `HEAD~1`.
-- The review package is regenerable scratch evidence; task comments retain the verdict and commit range.
+The controller gives a fresh reviewer:
 
-The reviewer is read-only: it does not edit files, the index, HEAD, branch state, Beads, or the report.
+- immutable Context Manifest and domain capsule;
+- implementer report (claims, not truth);
+- exact `BASE..HEAD` review package;
+- acceptance IDs and required evidence classes;
+- review round and fresh reviewer-context ID.
 
-## Task Review
+The reviewer is read-only. It does not mutate source, Git, reports, or Beads. Use files for bulky handoffs and comments for durable verdicts; never paste the controller transcript.
 
-Dispatch `./task-reviewer-prompt.md` with:
+## Typed Task Review
 
-- task bead ID and owned outcome IDs;
-- immutable manifest identity;
-- implementer report path;
-- review-package path and exact base/head;
-- named acceptance and verification evidence.
+`./task-reviewer-prompt.md` returns one acceptance matrix plus spec-compliance and code-quality verdicts. Every finding has:
 
-The single reviewer returns both a spec-compliance verdict and a code-quality verdict. It treats the implementer's report as claims to verify, not truth. Persist the complete verdict. A failed verdict leaves the task open.
+```text
+finding_id, severity, acceptance_ids, classification, evidence,
+invalidated_assumption, correction, counterexample, contract_hash, review_round
+```
 
-A `cannot verify from diff` warning does not automatically fail the task, but the controller must resolve it against named cross-task evidence. Record why it is satisfied or treat it as a finding.
+Classification is one of `contract-gap`, `implementation-defect`, `evidence-gap`, `integration-defect`, or `reviewer-disagreement`. Security regressions are Critical. Evidence names the exact line, artifact, command result, or reproducible observation; a rationale in the implementer report never lowers severity.
 
-## Corrections
+Each review round uses a fresh reviewer context. The implementer may retain the same task identity only while the six-field Context Manifest identity remains unchanged.
 
-When review finds an issue:
+## Two-Round Correction Limit
 
-1. classify it against the task contract;
-2. technically evaluate feedback using `superbeads:receiving-code-review`;
-3. if identity is unchanged, append correction lineage and return the precise finding to the same worker context;
-4. if any identity field changed, create a new manifest and fresh worker;
-5. require fresh verification evidence and regenerate the review package;
-6. re-review before merge or closure.
+After two failed review rounds, ordinary correction stops and diagnosis is mandatory.
 
-After two failed correction rounds on the same finding, stop repeating the loop. Diagnose whether authority is missing, acceptance is ambiguous, the implementation approach is invalid, or the model/host capability is insufficient. Escalate a user-owned decision rather than burning another identical turn.
+Round 1 failure: technically evaluate findings, send one consolidated correction to the same-task implementer lineage, gather fresh evidence, then use a fresh reviewer.
 
-## Outcome Review
+Round 2 failure: stop normal correction. Record exactly one diagnostic before any new dispatch:
 
-Task completion is not product completion. At every plan checkpoint and before epic closure, dispatch a fresh `./outcome-reviewer-prompt.md` with the outcome trace, user entry interfaces, governing product/design revisions, required evidence classes, environment identity, and commit.
+- `amend-contract` — governing acceptance or interface is incomplete/wrong;
+- `split-slice` — the task is too broad or combines distinct outcomes;
+- `resolve-product-decision` — a user-owned behavior is undecided;
+- `adjudicate-reviewer` — evidence supports a concrete reviewer disagreement.
 
-The outcome reviewer reports `PASS`, `FAIL`, `BLOCKED`, or `UNTESTED` for each ID. Only `PASS` satisfies it. Unit tests, CI, static review, direct API calls, or conformance do not substitute for a different evidence class named by the product contract.
+The diagnostic names a new task or contract strategy and sets dispatch disallowed for the old lineage. A third ordinary “try again” round is forbidden. A new task/contract starts with a new manifest and fresh implementer context.
 
-Persist the outcome report on the acceptance-gate bead. Any non-PASS outcome leaves that gate and epic open. An explicit scope cut must name the affected IDs and be recorded in the trace.
+## Evidence Ledger
 
-## Closure Evidence
+The controller maintains one JSON ledger with:
 
-Close a task only after:
+- current commit, contract hash, environment, and fixture hash;
+- task and epic acceptance-ID-to-evidence-class maps;
+- fresh task/outcome review identities and reports;
+- evidence records with command/flow, timestamp, artifact, result, and full identity;
+- typed review rounds and any required diagnostic.
 
-- implementer status and manifest identity are durable;
-- named verification commands passed with fresh output;
-- task review approved spec compliance and quality;
-- integration checkpoint passed where required;
-- commit base/head and concerns are recorded.
+Run the pure gate:
 
-Close an acceptance gate or epic only after all required outcome IDs pass. A later request to open a PR, monitor CI, or continue follow-ups never waives unfinished acceptance.
+```bash
+python3 "$PWD/skills/subagent-driven-development/scripts/sdd-evidence.py" check-task LEDGER.json
+python3 "$PWD/skills/subagent-driven-development/scripts/sdd-evidence.py" check-epic LEDGER.json
+```
+
+Only a current `PASS` in the required evidence class satisfies an ID. Missing, stale, substituted, `FAIL`, `BLOCKED`, or `UNTESTED` evidence is named and leaves the gate open. The checker never runs ledger commands or mutates state.
+
+## Separate Owners
+
+- Task review: one task diff, Slice Contract, code quality, and task evidence.
+- Whole-branch code review: integrated implementation risks across task boundaries.
+- Outcome review: user/system entry routes and every epic outcome ID on the integrated commit/environment/fixture.
+
+One gate cannot impersonate another. CI, unit tests, conformance, static review, direct API, browser/live, persistence, rollback, security, and agent-off evidence are distinct unless the product contract explicitly equates them.
+
+## Closure
+
+Persist report, typed findings, exact commit range, ledger path/hash, and checker output. A task may close only after `check-task` passes. Acceptance gate and epic may close only after `check-epic` passes. Draft PR or branch-disposition requests never waive unsatisfied IDs.

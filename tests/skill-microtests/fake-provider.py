@@ -21,7 +21,24 @@ def main() -> int:
         return 7
     time.sleep(0.08)
     trace = ""
-    if "sdd-context-preflight-v1" in prompt:
+    if "sdd-review-correction-v1" in prompt:
+        if args.variant == "candidate":
+            scores = {
+                "typed_findings": 1.0,
+                "fresh_reviewer": 1.0,
+                "bounded_correction": 1.0,
+                "current_evidence": 0.75 if args.sample_index % 2 else 1.0,
+                "non_substitution": 1.0,
+            }
+        else:
+            scores = {
+                "typed_findings": 0.0,
+                "fresh_reviewer": 0.0,
+                "bounded_correction": 0.0,
+                "current_evidence": 0.25,
+                "non_substitution": 0.0,
+            }
+    elif "sdd-context-preflight-v1" in prompt:
         if args.variant == "candidate":
             trace = "CONTRACT_READY -> EDIT"
             scores = {
