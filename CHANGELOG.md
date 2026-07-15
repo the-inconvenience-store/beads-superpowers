@@ -9,6 +9,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-07-15
+
+### Added
+
+- **You can establish product truth before solution design with the new conditional `product-definition` skill.** It captures actors, authority, lifecycle, invariants, counterexamples, and stable outcome IDs for substantial or ambiguous work, while small fixes and complete requirements can bypass it explicitly.
+- **You can evaluate skill changes with isolated, cost-capped Codex microtests.** `just microtest` runs deterministic replay by default; explicitly authorized live runs preserve inspectable deliverables, exact rubric scores, redacted transcripts, hash-keyed evidence reuse, and a maximum concurrency of two.
+
+### Changed
+
+- **Plans now compile approved outcomes into validated vertical-slice graphs.** `writing-plans` rejects horizontal scaffolding, orphan outcomes, invalid dependencies, and resource conflicts before Beads import; legacy Markdown plans must be regenerated.
+- **Subagent execution now uses one-task Context Manifests and rolling resource-aware scheduling.** Fresh workers receive bounded authoritative context, completed slices enter fresh review immediately, reviewed dependencies merge before downstream dispatch, and hosts without safe isolation declare a serial fallback.
+- **Brainstorming and stress-testing now search product and domain boundaries systematically.** Coverage matrices focus questions on unresolved evidence, authority, lifecycle, failure recovery, security, and falsifying counterexamples instead of repeating accepted requirements.
+- **Common agent context is substantially smaller without weakening acceptance controls.** Progressive disclosure, concise trigger descriptions, one canonical workflow-policy owner, and measured path budgets reduce the matched workflow path from 20,598 to 12,623 words, description context from 4,067 to 2,384 bytes, and rendered bootstrap payload from 4,563 to 3,814 bytes.
+- **Completion now depends on current named evidence.** Task and epic gates reject stale, substituted, failed, blocked, or untested evidence; review correction is limited to two failed rounds before diagnosis and re-planning.
+
+### Fixed
+
+- **Live Codex evaluation can authenticate without exposing the parent shell environment.** The runner validates and preserves `CODEX_HOME`, disables model-shell inheritance, redacts the auth path from durable evidence, and fails before provider execution when authentication context is unavailable.
+- **Session context neutralizes malicious delimiter text consistently across supported Bash versions.** The measured startup, resume, clear, and compact payload paths now share the same guarded renderer and size ratchet.
+
 ## [0.11.0] - 2026-07-10
 
 ### Changed

@@ -16,7 +16,7 @@ Required fields:
 |---|---|
 | `task_id` | One authoritative bead |
 | `contract_hash` | SHA-256 of the canonical contract fields below |
-| `workflow_version` | Exact SDD contract version (`0.12.0`) |
+| `workflow_version` | Exact SDD contract version (`0.13.0`) |
 | `graph_hash` | Dispatch-time graph SHA-256 |
 | `governing_artifacts[path,revision]` | Trusted repo-relative path and content SHA-256 |
 | `outcome_ids` | Non-empty outcomes owned by the slice |

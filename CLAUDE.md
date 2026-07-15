@@ -76,7 +76,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harnesses — Cursor, GitHub Copilot CLI, Kimi Code, Antigravity, Factory Droid, and Pi — that merges [Superpowers](https://github.com/obra/superpowers) skills (v6.1.1) with [Beads](https://github.com/gastownhall/beads) issue tracking (v1.1.0). It gives AI coding agents composable process-discipline skills (TDD, brainstorming, systematic debugging, code review, verification) plus persistent task memory via a Dolt-backed database.
 
 **Repository:** <https://github.com/the-inconvenience-store/superbeads>
-**Version:** 0.12.0
+**Version:** 0.13.0
 **License:** MIT (fork of obra/superpowers, also MIT)
 
 ## Architecture
@@ -88,7 +88,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `hooks/` — `session-start` (SessionStart: injects `using-superpowers` + composed beads context — curated memories + a `bd prime` pointer), the single recurring hook. Multi-format output supports Claude Code, Codex, Cursor, and generic CLIs. Registered in `hooks/hooks.json` (Claude Code) and `hooks/codex-hooks.json` (Codex). Auto-discovered.
 - `opencode/` — Native OpenCode TypeScript plugin (`superbeads-plugin.ts`). Two in-process hooks: a once-per-session bootstrap and a compaction re-injection. Distributed via `install.sh`.
 - `example-workflow/` — Ready-to-use project template: `CLAUDE.md` (Karpathy behavioral principles + beads integration) and `agents/yegge.md` (lean router — triages requests and routes to skills). `install.sh --with-yegge` installs `yegge.md` globally (opt-in; not installed by default).
-- `docs/` — Working knowledge base, not a website source tree. Current tracked content is `docs/research/`; skills also route graph plans to `docs/plans/` and ADRs to `docs/decisions/` when those directories are created.
+- `docs/` — Working knowledge base, not a website source tree. Research, graph plans, ADRs, and release audits live under `docs/research/`, `docs/plans/`, `docs/decisions/`, and `docs/audits/` respectively.
 - `.internal/` — Local session scratch (gitignored), including handoff inbox/archive docs and transient agent/server artifacts. Do not put durable user-facing docs here.
 - `tests/` — deterministic suites (hooks, manifests, skill contracts, install-shape, workflow outcome contract, installer Docker E2E, brainstorm-server Node tests) run directly or via the `just` surface. Install-shape proves packaging, not behavior. Live Codex micro-tests are cost-gated; Claude live testing is not required.
 - `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-policy-ownership.sh` (enforce one canonical owner plus conditional callers for shared workflow policy), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041).
@@ -280,6 +280,7 @@ just lint       # shellcheck gate alone (tracked .sh, baseline'd; SKIPs if shell
 just hooks      # tests/hooks/* (node tests SKIP visibly if node absent)
 just shape      # install-shape: 9 harnesses (Tier A full artifacts; Tier B hint+manifest)
 just shape codex  # one harness
+just microtest    # deterministic replay by default; live Codex requires explicit cost flags
 just selftest   # guard-the-guards: 4 mutations that must fail
 just server     # brainstorm-server Node tests (opt-in)
 just docker     # installer Docker E2E (opt-in, slow)

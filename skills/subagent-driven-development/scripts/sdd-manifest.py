@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 
-WORKFLOW_VERSION = "0.12.0"
+WORKFLOW_VERSION = "0.13.0"
 FIELDS = {
     "task_id", "contract_hash", "workflow_version", "graph_hash",
     "governing_artifacts", "outcome_ids", "base_commit",

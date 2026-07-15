@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.12.0-4f46e5.svg"></a>
+  <a href=".claude-plugin/plugin.json"><img alt="Plugin version" src="https://img.shields.io/badge/plugin-v0.13.0-4f46e5.svg"></a>
   <a href="https://github.com/the-inconvenience-store/superbeads/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/the-inconvenience-store/superbeads?style=social"></a>
 </p>
 
@@ -71,7 +71,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | `writing-skills`          | Meta-skill for creating or modifying skills in this plugin       |
 | `auditing-upstream-drift` | Detects staleness vs upstream superpowers and beads releases     |
 
-Workflow plans use the v0.12 graph JSON contract. This is a clean cutover: legacy
+Workflow plans use the v0.13 graph JSON contract. This is a clean cutover: legacy
 Markdown implementation plans are not accepted and must be regenerated. Shared workflow
 policy has one canonical owner at
 `skills/using-superpowers/references/session-policy.md`; other skills link to the

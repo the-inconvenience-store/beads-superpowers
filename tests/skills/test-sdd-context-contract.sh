@@ -61,7 +61,7 @@ changes = {
     "contract_hash": "f" * 64,
     "base_commit": "3" * 40,
     "worktree": "/tmp/superbeads-task-other",
-    "workflow_version": "0.13.0",
+    "workflow_version": "0.14.0",
     "graph_hash": "d" * 64,
 }
 for field, value in changes.items():
