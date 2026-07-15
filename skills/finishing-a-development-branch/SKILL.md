@@ -69,11 +69,7 @@ For automated cleanup, remove only a worktree proven to live below `.worktrees/`
 
 File any remaining/discovered work using the severity, confidence, and evidence stamp from `verification-before-completion`. Confirmed work has no `[spec]` prefix; speculative work does. Keep acceptance blockers wired and open.
 
-**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
-
-```bash
-bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
-```
+When this workflow closes after producing durable insights, read [Durable Memory](../using-superpowers/references/session-policy.md#durable-memory) and apply it; otherwise do not load it.
 
 ## 5. Land the Plane
 

@@ -221,7 +221,7 @@ done
 for file in "$EXECUTING" "$PARALLEL"; do
   grep -Fq "sdd-scheduler.py" "$file" || { echo "FAIL: ${file#$ROOT/} does not route to scheduler" >&2; exit 1; }
 done
-if (( $(grep -Fc 'bd create --graph' "$EXECUTING") != 1 )); then
+if grep -Fq 'bd create --graph' "$EXECUTING"; then
   echo "FAIL: executing-plans still recreates an accepted graph" >&2; exit 1
 fi
 if grep -Eq 'bd ready --parent|bd worktree create' "$PARALLEL"; then

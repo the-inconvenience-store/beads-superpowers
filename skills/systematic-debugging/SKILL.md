@@ -53,15 +53,7 @@ You MUST complete each phase before proceeding to the next.
 
 Search for prior root-cause memories on the failing component before gathering fresh evidence: `bd memories <keyword>`.
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several creates/updates/closes = one `bd batch` or `bd create --graph`
-> call, not a loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
+Before this workflow's first Beads read/write or claim decision, read [Beads Read/Write Economy and Claim Boundary](../using-superpowers/references/session-policy.md#beads-readwrite-economy); do not load it when no tracker operation is needed.
 
 1. **Read Error Messages Carefully**
    - Don't skip past errors or warnings
@@ -225,25 +217,7 @@ Search for prior root-cause memories on the failing component before gathering f
 
    This is NOT a failed hypothesis - this is a wrong architecture.
 
-After the work is settled, present the Capture gate (you MUST present it; the user picks Skip if nothing is worth keeping):
-
-```json
-{
-  "questions": [{
-    "question": "This produced something worth preserving — what should I capture?",
-    "header": "Capture",
-    "options": [
-      {"label": "ADR + memory", "description": "Record an ADR for the decision AND a durable bd-remember memory"},
-      {"label": "ADR only", "description": "Record an ADR for the architecturally-significant decision"},
-      {"label": "Memory only", "description": "Capture a durable lesson/insight via bd remember"},
-      {"label": "Skip", "description": "Nothing here is durable enough to preserve"}
-    ],
-    "multiSelect": false
-  }]
-}
-```
-
-Route: **ADR / ADR+memory** → write the ADR per the 3-mark gate (`docs/decisions/ADR-NNNN-<kebab>.md`, sections Context/Decision/Rationale/Consequences, update `docs/decisions/INDEX.md`). **Memory / ADR+memory** → `bd remember "<kind>: <durable, evidence-backed insight>"`. **Skip** → nothing.
+When this workflow reaches its settled capture decision, read [Capture Gate](../using-superpowers/references/session-policy.md#capture-gate) and present it; do not load it on unrelated steps.
 
 ## Red Flags - STOP and Follow Process
 

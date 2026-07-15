@@ -84,15 +84,7 @@ If `bd` is not installed or `.beads/` is missing, the script's `== ledger ==` / 
 
 **Do NOT run `bd dolt status`, `bd dolt show`, or `bd dolt push`** — they aren't needed for orientation, and `bd dolt push` mutates the remote. Keep orientation read-only (`orient.sh` itself never calls them).
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several creates/updates/closes = one `bd batch` or `bd create --graph`
-> call, not a loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
+Before this workflow's first Beads read/write or claim decision, read [Beads Read/Write Economy and Claim Boundary](../using-superpowers/references/session-policy.md#beads-readwrite-economy); do not load it when no tracker operation is needed.
 
 ## Phase 2 — Codebase exploration (single parallel batch, content varies by path)
 
@@ -227,11 +219,7 @@ Validate each line; fix or mark degraded, then re-check. Only emit once all pass
 
 The trailing "I'm ready" line is the **terminal contract**: the skill stops here. Do NOT auto-claim the next bead. Do NOT start working on anything. The user drives the next move.
 
-**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
-
-```bash
-bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
-```
+When this workflow closes after producing durable insights, read [Durable Memory](../using-superpowers/references/session-policy.md#durable-memory) and apply it; otherwise do not load it.
 
 If orientation surfaced a Phase-1 memory that is now stale or wrong, remove it: `bd forget <key>`.
 

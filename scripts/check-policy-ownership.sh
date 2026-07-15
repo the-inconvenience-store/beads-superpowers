@@ -1,19 +1,56 @@
 #!/usr/bin/env bash
-# Report declared legacy policy callers and prove one canonical semantic owner.
+# Enforce one semantic owner and one conditional pointer per declared caller.
 set -uo pipefail
 
 ROOT="${POLICY_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 OWNER="skills/using-superpowers/references/session-policy.md"
-CONVENTIONS="scripts/check-convention-sync.sh"
 LTP='`bd close` → `bd dolt push` → `git pull --rebase && git push` → `git status`'
 
-array_members() {
-  local file="$1" array="$2"
-  awk -v target="$array=(" '
-    $0 == target { inside=1; next }
-    inside && $0 == ")" { exit }
-    inside { gsub(/^[[:space:]]+|[[:space:]]+$/, ""); if (length) print }
-  ' "$file"
+inventory() {
+  while read -r policy path; do
+    [ -n "$policy" ] && printf '%s\t%s\n' "$policy" "$path"
+  done <<'EOF'
+capture skills/brainstorming/SKILL.md
+capture skills/writing-plans/SKILL.md
+capture skills/stress-test/SKILL.md
+capture skills/systematic-debugging/SKILL.md
+memory skills/executing-plans/SKILL.md
+memory skills/test-driven-development/SKILL.md
+memory skills/project-init/SKILL.md
+memory skills/writing-skills/SKILL.md
+memory skills/subagent-driven-development/SKILL.md
+memory skills/using-git-worktrees/SKILL.md
+memory skills/requesting-code-review/SKILL.md
+memory skills/receiving-code-review/SKILL.md
+memory skills/research-driven-development/SKILL.md
+memory skills/getting-up-to-speed/SKILL.md
+memory skills/finishing-a-development-branch/SKILL.md
+memory skills/dispatching-parallel-agents/SKILL.md
+memory skills/document-release/SKILL.md
+memory skills/write-documentation/SKILL.md
+memory skills/verification-before-completion/SKILL.md
+economy skills/subagent-driven-development/SKILL.md
+economy skills/executing-plans/SKILL.md
+economy skills/using-git-worktrees/SKILL.md
+economy skills/project-init/SKILL.md
+economy skills/getting-up-to-speed/SKILL.md
+economy skills/writing-plans/SKILL.md
+economy skills/brainstorming/SKILL.md
+economy skills/systematic-debugging/SKILL.md
+economy skills/stress-test/SKILL.md
+completion skills/executing-plans/SKILL.md
+completion skills/using-superpowers/SKILL.md
+completion CLAUDE.md
+EOF
+}
+
+fragment_for() {
+  case "$1" in
+    capture) printf '%s\n' 'session-policy.md#capture-gate' ;;
+    memory) printf '%s\n' 'session-policy.md#durable-memory' ;;
+    economy) printf '%s\n' 'session-policy.md#beads-readwrite-economy' ;;
+    completion) printf '%s\n' 'session-policy.md#session-completion' ;;
+  esac
 }
 
 signature_for() {
@@ -25,21 +62,14 @@ signature_for() {
   esac
 }
 
-array_for() {
-  case "$1" in
-    capture) printf '%s\n' CB3_SITES ;;
-    memory) printf '%s\n' CB4_SITES ;;
-    economy) printf '%s\n' CB5_SITES ;;
-    completion) printf '%s\n' LTP_SITES ;;
-  esac
-}
-
 audit() {
-  local root="$1" report="$2" tmp fail=0 policy array signature path file count line rel
+  local root="$1" report="$2" tmp fail=0 policy path file fragment signature
+  local count line pointer rel
   tmp="$(mktemp -d)"
   : >"$tmp/report"
   : >"$tmp/declared"
   : >"$tmp/errors"
+  inventory >"$tmp/inventory"
 
   if [ ! -f "$root/$OWNER" ]; then
     echo "owner: missing $OWNER" >>"$tmp/errors"; fail=1
@@ -56,60 +86,60 @@ audit() {
     fi
   fi
 
-  if [ ! -f "$root/$CONVENTIONS" ]; then
-    echo "inventory: missing $CONVENTIONS" >>"$tmp/errors"; fail=1
-  else
-    for policy in capture memory economy completion; do
-      array="$(array_for "$policy")"
-      signature="$(signature_for "$policy")"
-      array_members "$root/$CONVENTIONS" "$array" >"$tmp/members"
-      if [ ! -s "$tmp/members" ]; then
-        echo "inventory: $array has no callers" >>"$tmp/errors"; fail=1
-      fi
-      while IFS= read -r path; do
-        printf '%s\t%s\n' "$policy" "$path" >>"$tmp/declared"
-        file="$root/$path"
-        if [ ! -f "$file" ]; then
-          echo "$policy: unclassified caller missing file $path" >>"$tmp/errors"; fail=1
-          continue
-        fi
-        count=$(grep -Fc -- "$signature" "$file" || true)
-        if [ "$count" -ne 1 ]; then
-          echo "$policy: unclassified caller $path has $count matching signatures" >>"$tmp/errors"; fail=1
-          continue
-        fi
-        line=$(grep -nF -- "$signature" "$file" | head -1 | cut -d: -f1)
-        printf '%s\t%s\t%s\tlegacy-copy\n' "$policy" "$path" "$line" >>"$tmp/report"
-      done <"$tmp/members"
+  while IFS=$'\t' read -r policy path; do
+    printf '%s\t%s\n' "$policy" "$path" >>"$tmp/declared"
+    file="$root/$path"
+    fragment="$(fragment_for "$policy")"
+    if [ ! -f "$file" ]; then
+      echo "$policy: declared caller missing file $path" >>"$tmp/errors"; fail=1
+      continue
+    fi
+    count=$(grep -Fc -- "$fragment" "$file" || true)
+    if [ "$count" -ne 1 ]; then
+      echo "$policy: $path must contain exactly one pointer (found $count)" >>"$tmp/errors"; fail=1
+      continue
+    fi
+    line=$(grep -nF -- "$fragment" "$file" | head -1 | cut -d: -f1)
+    pointer=$(sed -n "${line}p" "$file")
+    case "$pointer" in
+      *When\ *|*Before\ *) ;;
+      *) echo "$policy: $path pointer must state its load condition" >>"$tmp/errors"; fail=1 ;;
+    esac
+    printf '%s\t%s\t%s\tpointer\n' "$policy" "$path" "$line" >>"$tmp/report"
+  done <"$tmp/inventory"
 
-      {
-        find "$root/skills" -type f -name '*.md' -print
-        [ -f "$root/CLAUDE.md" ] && printf '%s\n' "$root/CLAUDE.md"
-      } | LC_ALL=C sort >"$tmp/markdown-files"
-      while IFS= read -r file; do
-        rel="${file#"$root/"}"
-        [ "$rel" = "$OWNER" ] && continue
-        if grep -Fq -- "$signature" "$file" && ! grep -Fq -- "$policy	$rel" "$tmp/declared"; then
-          echo "$policy: unknown copy signature in $rel" >>"$tmp/errors"; fail=1
-        fi
-      done <"$tmp/markdown-files"
-    done
-  fi
+  {
+    find "$root/skills" -type f -name '*.md' -print
+    [ -f "$root/CLAUDE.md" ] && printf '%s\n' "$root/CLAUDE.md"
+  } | LC_ALL=C sort >"$tmp/markdown-files"
+
+  for policy in capture memory economy completion; do
+    fragment="$(fragment_for "$policy")"
+    signature="$(signature_for "$policy")"
+    while IFS= read -r file; do
+      rel="${file#"$root/"}"
+      [ "$rel" = "$OWNER" ] && continue
+      if grep -Fq -- "$signature" "$file"; then
+        echo "$policy: copied policy remains in $rel" >>"$tmp/errors"; fail=1
+      fi
+      if grep -Fq -- "$fragment" "$file" && \
+        ! grep -Fq -- "$(printf '%s\t%s' "$policy" "$rel")" "$tmp/declared"; then
+        echo "$policy: undeclared policy pointer in $rel" >>"$tmp/errors"; fail=1
+      fi
+    done <"$tmp/markdown-files"
+  done
 
   LC_ALL=C sort "$tmp/report" >"$report"
-  if [ "$fail" -ne 0 ]; then
-    LC_ALL=C sort -u "$tmp/errors" >&2
-  fi
+  if [ "$fail" -ne 0 ]; then LC_ALL=C sort -u "$tmp/errors" >&2; fi
   rm -rf "$tmp"
   return "$fail"
 }
 
 copy_fixture() {
   local destination="$1"
-  mkdir -p "$destination/scripts"
+  mkdir -p "$destination"
   cp -Rf "$ROOT/skills" "$destination/skills"
   cp -f "$ROOT/CLAUDE.md" "$destination/CLAUDE.md"
-  cp -f "$ROOT/$CONVENTIONS" "$destination/$CONVENTIONS"
 }
 
 self_test() {
@@ -128,11 +158,11 @@ self_test() {
   printf '%s\n' '**Capture what you learned.**' >"$case_root/skills/unknown/SKILL.md"
   audit "$case_root" "$tmp/unknown-report" >/dev/null 2>&1 && failures=$((failures + 1))
 
-  case_root="$tmp/unclassified"; copy_fixture "$case_root"
-  awk 'index($0, "> **bd frugality: bounded output, one round trip.**") == 0' \
+  case_root="$tmp/missing-pointer"; copy_fixture "$case_root"
+  grep -vF -- 'session-policy.md#beads-readwrite-economy' \
     "$case_root/skills/subagent-driven-development/SKILL.md" >"$tmp/caller" && \
     mv -f "$tmp/caller" "$case_root/skills/subagent-driven-development/SKILL.md"
-  audit "$case_root" "$tmp/unclassified-report" >/dev/null 2>&1 && failures=$((failures + 1))
+  audit "$case_root" "$tmp/missing-pointer-report" >/dev/null 2>&1 && failures=$((failures + 1))
 
   case_root="$tmp/conflicting-completion"; copy_fixture "$case_root"
   grep -vF -- "$LTP" "$case_root/$OWNER" >"$tmp/completion" && mv -f "$tmp/completion" "$case_root/$OWNER"
@@ -148,6 +178,12 @@ self_test() {
 }
 
 case "${1:-}" in
+  --enforce)
+    output="$(mktemp)"
+    if audit "$ROOT" "$output"; then echo "policy-ownership: PASS"; rc=0; else rc=1; fi
+    rm -f "$output"
+    exit "$rc"
+    ;;
   --report)
     output="$(mktemp)"
     if audit "$ROOT" "$output"; then cat "$output"; rc=0; else rc=1; fi
@@ -155,5 +191,5 @@ case "${1:-}" in
     exit "$rc"
     ;;
   --self-test) self_test ;;
-  *) echo "usage: $0 --report | --self-test" >&2; exit 2 ;;
+  *) echo "usage: $0 --enforce | --report | --self-test" >&2; exit 2 ;;
 esac

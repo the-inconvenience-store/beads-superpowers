@@ -91,7 +91,7 @@ A plugin for Claude Code, Codex, and OpenCode (verified) plus 6 best-effort harn
 - `docs/` — Working knowledge base, not a website source tree. Current tracked content is `docs/research/`; skills also route graph plans to `docs/plans/` and ADRs to `docs/decisions/` when those directories are created.
 - `.internal/` — Local session scratch (gitignored), including handoff inbox/archive docs and transient agent/server artifacts. Do not put durable user-facing docs here.
 - `tests/` — deterministic suites (hooks, manifests, skills contracts, install-shape, installer Docker E2E, brainstorm-server Node tests) run via the `just` surface; the LLM-driven suites (claude-code, explicit-skill-requests, skill-triggering, subagent-driven-dev) are deprecated in place — see `tests/*/DEPRECATED.md`.
-- `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-convention-sync.sh` (verify shared convention blocks are byte-identical across skills), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041).
+- `scripts/` — `bump-version.sh` (sync version across 8 files), `check-skill-count.sh` (guard: forbid hardcoded skill counts + structural self-consistency), `check-agent-bead-stamp.sh`, `check-policy-ownership.sh` (enforce one canonical owner plus conditional callers for shared workflow policy), `lint-shell.sh` (shellcheck gate over tracked `.sh` with committed baseline; visible SKIP when shellcheck absent), `check-askuser-genericization.sh` (guard: skills use generic question-tool phrasing — ADR-0041).
 - `install.sh` — curl installer with 3-tier fallback chain (plugin system → npx → tarball/git clone). SHA-256 checksum validation, atomic rollback via staging directory, lazy prerequisites. Auto-detects Claude Code, Codex, OpenCode, and 6 more CLIs (Cursor, Copilot, Droid, Antigravity, Kimi, Pi).
 
 ## Key Design Decisions
@@ -164,7 +164,7 @@ scripts/
   bump-version.sh          # Sync version across package.json + plugin manifests
   check-skill-count.sh     # Guard: forbid hardcoded skill counts + structural self-consistency
   check-agent-bead-stamp.sh  # Verify agent-filed bead discipline convention
-  check-convention-sync.sh   # Verify shared convention blocks are byte-identical across skills
+  check-policy-ownership.sh  # Enforce canonical shared workflow policy ownership and callers
   lint-shell.sh              # Shellcheck gate over tracked .sh (baseline + visible-SKIP)
   lint-shell-baseline.txt    # Committed lint baseline (empty at adoption — repo is clean)
   check-askuser-genericization.sh  # Guard: literal AskUserQuestion only under using-superpowers/references/ (ADR-0041)
@@ -214,7 +214,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 - Use `bd` for ALL task tracking — never TodoWrite, TaskCreate, or markdown TODOs
 - Only the orchestrating agent manages beads — subagents do NOT touch beads
 - Include bead IDs in commit messages: `git commit -m "Add feature (bd-a1b2)"`
-- Every session ends with Land the Plane: `bd close` → `bd dolt push` → `git pull --rebase && git push` → `git status`
+- When a session reaches completion, read [Session Completion](skills/using-superpowers/references/session-policy.md#session-completion) and follow it.
 
 ## Skills
 

@@ -42,22 +42,14 @@ In a session without isolated subagents, set capability to `host-limited` and ex
 
 An empty dispatch list is not completion: inspect `reasons.completion` for `complete`, `blocked`, `in-progress`, `human-gated`, or `cyclic`.
 
-> **bd frugality: bounded output, one round trip.** Cap reads: `bd ready -n 10`,
-> `bd show --short <id>` to skim (full `bd show` only when the body is needed),
-> `bd memories <keyword>` (NEVER bare `bd memories` — it dumps the whole store).
-> Batch writes: several creates/updates/closes = one `bd batch` or `bd create --graph`
-> call, not a loop. Filter big outputs before they hit context
-> (`... | grep -E "PATTERN" | head -20`). Keep write confirmations — they are evidence.
-> **`--claim` boundary:** `bd ready --claim` ONLY in autonomous take-next-task flows
-> (this skill's batch/wave dispatch). FORBIDDEN wherever the user picks the work —
-> orientation, brainstorming, session close. Efficiency never erodes a consent gate.
+Before this workflow's first Beads read/write or claim decision, read [Beads Read/Write Economy and Claim Boundary](../using-superpowers/references/session-policy.md#beads-readwrite-economy); do not load it when no tracker operation is needed.
 
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superbeads:finishing-a-development-branch
-- The finishing skill includes the **Land the Plane** session close protocol (`bd close` → `bd dolt push` → `git pull --rebase && git push` → `git status`)
+- When this workflow reaches session completion, read [Session Completion](../using-superpowers/references/session-policy.md#session-completion) and follow it.
 - Follow that skill to verify tests, present options, execute choice
 
 ## When to Stop and Ask for Help
@@ -97,11 +89,7 @@ After all tasks complete and verified:
 - Never start implementation on main/master branch without explicit user consent
 - **Production-Grade Doctrine:** never skip a verification or drop a task to make progress — `bd defer`/`bd human` are for genuine blockers, never a quiet way to descope required work. Never weaken, bypass, or remove a security control — a security regression is never acceptable.
 
-**Capture what you learned.** At close, record every durable, evidence-backed insight from this work — anything still true next month, tied to a file, test, or command. Don't skip because it feels minor: if it would save a future session time or stop a repeated mistake, record it. Never record guesses, one-offs, or secrets (tokens, keys, PII — every memory is injected into all future sessions). Update an existing memory in place (`bd remember --key <key>`) rather than adding a near-duplicate.
-
-```bash
-bd remember "<kind>: <durable, evidence-backed insight>"   # kind: lesson / pattern / design / root-cause / research
-```
+When this workflow closes after producing durable insights, read [Durable Memory](../using-superpowers/references/session-policy.md#durable-memory) and apply it; otherwise do not load it.
 
 ## Integration
 
