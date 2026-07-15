@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 
@@ -20,7 +21,11 @@ def main() -> int:
         summary = "Control decomposes work horizontally with partial outcome trace."
     result = {"rubric_scores": scores, "summary": summary}
     args.output.write_text(json.dumps(result), encoding="utf-8")
-    print(json.dumps({"sample": args.sample_index, "variant": args.variant}))
+    print(
+        json.dumps(
+            {"sample": args.sample_index, "variant": args.variant, "cwd": os.getcwd()}
+        )
+    )
     return 0
 
 

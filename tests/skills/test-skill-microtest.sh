@@ -23,16 +23,23 @@ spec.loader.exec_module(module)
 root = tmp / "sandbox"
 schema = tmp / "schema.json"
 output = tmp / "last-message.json"
-assert module.build_codex_argv(root, schema, output) == [
-    "codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
-    "--sandbox", "read-only", "--ask-for-approval", "never", "-C", str(root),
-    "--output-schema", str(schema), "--output-last-message", str(output), "-",
-]
-assert module.build_claude_argv(root, schema, output) == [
-    "claude", "--print", "--bare", "--tools", "", "--no-session-persistence",
-    "--permission-mode", "dontAsk", "--output-format", "json",
-    "--json-schema", str(schema),
-]
+assert module.build_codex_launch(root, schema, output, "codex-model") == {
+    "argv": [
+        "codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+        "--sandbox", "read-only", "--ask-for-approval", "never", "--model", "codex-model",
+        "-C", str(root), "--output-schema", str(schema),
+        "--output-last-message", str(output), "-",
+    ],
+    "cwd": str(root),
+}
+assert module.build_claude_launch(root, schema, output, "claude-model") == {
+    "argv": [
+        "claude", "--print", "--bare", "--tools", "", "--no-session-persistence",
+        "--permission-mode", "dontAsk", "--model", "claude-model",
+        "--output-format", "json", "--json-schema", str(schema),
+    ],
+    "cwd": str(root),
+}
 assert module.provider_status("claude") == "not_live_tested"
 
 allowed = tmp / "allowed"
@@ -50,10 +57,47 @@ for unsafe in ("../outside.txt", "escape"):
     else:
         raise AssertionError(f"unsafe fixture accepted: {unsafe}")
 
+repo = tmp / "repo"
+(repo / "skills/one").mkdir(parents=True)
+(repo / "skills/two").mkdir(parents=True)
+(repo / "skills/one/SKILL.md").write_text("one\n", encoding="utf-8")
+(repo / "skills/two/SKILL.md").write_text("two\n", encoding="utf-8")
+(repo / "skills/escape").symlink_to(outside)
+skill_paths = module.validate_candidate_skill_paths(
+    ["skills/one/SKILL.md", "skills/two/SKILL.md"], repo
+)
+original_skill_hash = module.candidate_skill_hash(skill_paths, repo)
+assert original_skill_hash != module.candidate_skill_hash(
+    list(reversed(skill_paths)), repo
+)
+(repo / "skills/one/SKILL.md").write_text("one changed\n", encoding="utf-8")
+assert original_skill_hash != module.candidate_skill_hash(skill_paths, repo)
+prompt_scenario = {"control_prompt": "control", "candidate_prompt": "candidate"}
+candidate_provider_prompt = module.build_provider_prompt(
+    prompt_scenario, "candidate", 1, skill_paths, repo
+)
+assert candidate_provider_prompt.index("skills/one/SKILL.md") < candidate_provider_prompt.index("skills/two/SKILL.md")
+assert "one changed" in candidate_provider_prompt and "two\n" in candidate_provider_prompt
+assert "one changed" not in module.build_provider_prompt(
+    prompt_scenario, "control", 1, skill_paths, repo
+)
+for unsafe_paths in (
+    ["../outside.txt"],
+    ["skills/escape"],
+    ["skills/missing/SKILL.md"],
+    ["skills/one/SKILL.md", "skills/one/SKILL.md"],
+):
+    try:
+        module.validate_candidate_skill_paths(unsafe_paths, repo)
+    except module.MicrotestError:
+        pass
+    else:
+        raise AssertionError(f"unsafe candidate skill paths accepted: {unsafe_paths}")
+
 identity = {
     "scenario": "scenario-a", "skill_hash": "skill-a", "provider": "replay",
     "model": "replay-v1", "fixture_hash": "fixture-a",
-    "rubric_version": "1", "runner_version": "1",
+    "rubric_version": "1", "runner_version": "1", "runs": 5,
 }
 cache_path = tmp / "evidence.json"
 cache_path.write_text(json.dumps({"identity": identity, "passed": True}), encoding="utf-8")
@@ -64,6 +108,8 @@ for field in identity:
     cached, reasons = module.cache_state(cache_path, changed)
     assert cached is None
     assert reasons == [f"{field}_changed"]
+cache_path.write_text(json.dumps({"identity": [], "passed": True}), encoding="utf-8")
+assert module.cache_state(cache_path, identity) == (None, ["invalid_evidence"])
 
 source = runner_path.read_text(encoding="utf-8")
 assert "shell=True" not in source
@@ -126,19 +172,37 @@ expect_preflight_failure cost-confirmation 'confirm-cost' \
   --scenario "$SCENARIO" --provider codex --runs 1 --max-runs 5 --concurrency 1 --max-cost-usd 1
 expect_preflight_failure cost-cap 'max-cost-usd' \
   --scenario "$SCENARIO" --provider codex --runs 1 --max-runs 5 --concurrency 1 --confirm-cost --max-cost-usd 0
+for invalid_cost in nan inf -inf; do
+  expect_preflight_failure "cost-$invalid_cost" 'finite positive|max-cost-usd' \
+    --scenario "$SCENARIO" --provider codex --model codex-model --runs 1 --max-runs 5 \
+    --concurrency 1 --confirm-cost --max-cost-usd "$invalid_cost"
+done
+expect_preflight_failure cost-reservation 'reserved live cost|max-cost-usd' \
+  --scenario "$SCENARIO" --provider codex --model codex-model --runs 2 --max-runs 5 \
+  --concurrency 1 --confirm-cost --max-cost-usd 3
+expect_preflight_failure codex-model 'Codex.*--model|--model.*Codex' \
+  --scenario "$SCENARIO" --provider codex --runs 1 --max-runs 5 --concurrency 1 \
+  --confirm-cost --max-cost-usd 2
 
 EVIDENCE="$TMP/replay-evidence"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider replay --runs 5 \
-  --max-runs 5 --concurrency 2 --evidence-dir "$EVIDENCE" >"$TMP/replay-first.json"
+  --max-runs 5 --concurrency 2 --evidence-dir "$EVIDENCE" \
+  >"$TMP/replay-first.json" 2>"$TMP/replay-first.err"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider replay --runs 5 \
-  --max-runs 5 --concurrency 2 --evidence-dir "$EVIDENCE" >"$TMP/replay-second.json"
+  --max-runs 5 --concurrency 2 --evidence-dir "$EVIDENCE" \
+  >"$TMP/replay-second.json" 2>"$TMP/replay-second.err"
 
-python3 - "$TMP/replay-first.json" "$TMP/replay-second.json" "$EVIDENCE" "$TMP" <<'PY'
+python3 - "$TMP/replay-first.json" "$TMP/replay-second.json" \
+  "$TMP/replay-first.err" "$ROOT" "$TMP" "$EVIDENCE" <<'PY'
 import json
+import os
+import re
+import shutil
+import stat
 import sys
 from pathlib import Path
 
-first_path, second_path, evidence, tmp = map(Path, sys.argv[1:])
+first_path, second_path, stderr_path, root, tmp, evidence = map(Path, sys.argv[1:])
 first = json.loads(first_path.read_text(encoding="utf-8"))
 second = json.loads(second_path.read_text(encoding="utf-8"))
 assert first["cache"] == {"reused": False, "invalidation_reasons": ["no_passing_evidence"]}
@@ -152,43 +216,81 @@ assert first["aggregate"] == {
     "control_mean": 0.25, "control_variance": 0.0,
     "delta_mean": 0.75, "delta_variance": 0.0,
 }
+raw_root_text = stderr_path.read_text(encoding="utf-8").strip()
+assert raw_root_text.startswith("raw_transcript_root=")
+raw_root = Path(raw_root_text.split("=", 1)[1])
+assert root.resolve() not in raw_root.resolve().parents
+assert stat.S_IMODE(raw_root.stat().st_mode) == 0o700
+raw_files = sorted(raw_root.glob("*.txt"))
+assert len(raw_files) == 10
+assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in raw_files)
+provider_roots = []
+for path in raw_files:
+    match = re.search(r'"cwd": "([^"]+)"', path.read_text(encoding="utf-8"))
+    assert match, path
+    provider_root = Path(match.group(1))
+    assert root.resolve() not in provider_root.resolve().parents
+    assert not provider_root.exists()
+    provider_roots.append(provider_root)
+assert len(set(provider_roots)) == 10
 for call in calls:
-    transcript = Path(call["raw_transcript"])
-    assert not transcript.is_absolute()
-    assert (evidence / transcript).is_file()
+    assert call["raw_transcript"].startswith("[REDACTED_RAW_ROOT]/")
 assert second["cache"] == {"reused": True, "invalidation_reasons": []}
 assert second["execution"]["provider_calls"] == 0
 assert second["aggregate"] == first["aggregate"]
 durable = first_path.read_text(encoding="utf-8") + second_path.read_text(encoding="utf-8")
+durable += (evidence / "writing-plans-horizontal-baseline.json").read_text(encoding="utf-8")
 assert str(tmp) not in durable
+assert str(raw_root) not in durable
 assert "FAKE_TOKEN=" not in durable
+shutil.rmtree(raw_root)
+PY
+
+python3 "$RUNNER" --scenario "$SCENARIO" --provider replay --runs 4 \
+  --max-runs 5 --concurrency 2 --evidence-dir "$EVIDENCE" \
+  >"$TMP/replay-runs-changed.json" 2>"$TMP/replay-runs-changed.err"
+python3 - "$TMP/replay-runs-changed.json" "$TMP/replay-runs-changed.err" <<'PY'
+import json
+import shutil
+import sys
+from pathlib import Path
+
+report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert report["cache"] == {"reused": False, "invalidation_reasons": ["runs_changed"]}
+assert report["execution"]["provider_calls"] == 8
+raw_root = Path(Path(sys.argv[2]).read_text(encoding="utf-8").strip().split("=", 1)[1])
+shutil.rmtree(raw_root)
 PY
 
 FAKE_EVIDENCE="$TMP/fake-evidence"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider fake --runs 5 \
-  --max-runs 5 --concurrency 2 --evidence-dir "$FAKE_EVIDENCE" >"$TMP/fake.json"
-python3 - "$TMP/fake.json" "$FAKE_EVIDENCE" "$TMP" <<'PY'
+  --max-runs 5 --concurrency 2 --evidence-dir "$FAKE_EVIDENCE" \
+  >"$TMP/fake.json" 2>"$TMP/fake.err"
+python3 - "$TMP/fake.json" "$TMP/fake.err" "$TMP" <<'PY'
 import json
+import shutil
 import sys
 from pathlib import Path
 
-report_path, evidence, tmp = map(Path, sys.argv[1:])
+report_path, stderr_path, tmp = map(Path, sys.argv[1:])
 report = json.loads(report_path.read_text(encoding="utf-8"))
 assert report["execution"]["max_observed_concurrency"] == 2
 assert report["aggregate"]["candidate_variance"] > 0
-raw = "\n".join(path.read_text(encoding="utf-8") for path in (evidence / "raw").glob("*.txt"))
+raw_root = Path(stderr_path.read_text(encoding="utf-8").strip().split("=", 1)[1])
+raw = "\n".join(path.read_text(encoding="utf-8") for path in raw_root.glob("*.txt"))
 assert "fake-secret-marker" in raw
-assert str(tmp) in raw
+assert str(raw_root) not in report_path.read_text(encoding="utf-8")
 durable = report_path.read_text(encoding="utf-8")
 assert "fake-secret-marker" not in durable
 assert str(tmp) not in durable
 assert "[REDACTED_SECRET]" in durable
 assert "[REDACTED_PATH]" in durable
+shutil.rmtree(raw_root)
 PY
 
 CLAUDE_EVIDENCE="$TMP/claude-evidence"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider claude --runs 1 \
-  --max-runs 5 --concurrency 1 --max-cost-usd 1 --confirm-cost \
+  --model claude-model --max-runs 5 --concurrency 1 --max-cost-usd 2 --confirm-cost \
   --evidence-dir "$CLAUDE_EVIDENCE" >"$TMP/claude.json"
 python3 - "$TMP/claude.json" "$CLAUDE_EVIDENCE" <<'PY'
 import json
@@ -197,6 +299,10 @@ from pathlib import Path
 
 report = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
 assert report["provider"]["status"] == "not_live_tested"
+assert report["provider"]["model"] == "claude-model"
+assert report["provider"]["requested_max_cost_usd"] == 2
+assert report["provider"]["reserved_cost_usd"] == 2
+assert report["provider"]["cost_control"] == "conservative_preflight_reservation"
 assert report["execution"]["provider_calls"] == 0
 assert not (Path(sys.argv[2]) / "raw").exists()
 PY

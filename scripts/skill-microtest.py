@@ -7,6 +7,8 @@ import argparse
 import concurrent.futures
 import hashlib
 import json
+import math
+import os
 import re
 import shutil
 import statistics
@@ -19,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 
-RUNNER_VERSION = "1"
+RUNNER_VERSION = "2"
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_ROOT = ROOT / "tests/fixtures/skill-microtests/allowed"
 SCHEMA_ROOT = ROOT / "tests/skill-microtests/schemas"
@@ -31,8 +33,10 @@ IDENTITY_FIELDS = (
     "fixture_hash",
     "rubric_version",
     "runner_version",
+    "runs",
 )
 LIVE_PROVIDERS = {"codex", "claude"}
+LIVE_CALL_RESERVATION_USD = 1.0
 PROVIDER_STATUS = {
     "fake": "test_only",
     "replay": "deterministic_replay",
@@ -79,6 +83,44 @@ def validate_fixture_paths(raw_paths: list[str], allowed_root: Path) -> list[Pat
     return paths
 
 
+def validate_candidate_skill_paths(raw_paths: list[str], repo_root: Path) -> list[Path]:
+    if not isinstance(raw_paths, list) or not raw_paths:
+        raise MicrotestError("candidate_skill_paths must be a non-empty array")
+    root = repo_root.resolve()
+    paths: list[Path] = []
+    seen: set[Path] = set()
+    for raw_path in raw_paths:
+        if not isinstance(raw_path, str) or not raw_path:
+            raise MicrotestError("candidate skill path must be a non-empty string")
+        relative = Path(raw_path)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise MicrotestError(f"candidate skill path escapes repository: {raw_path}")
+        candidate = (root / relative).resolve()
+        try:
+            candidate.relative_to(root)
+        except ValueError as error:
+            raise MicrotestError(
+                f"candidate skill path escapes repository: {raw_path}"
+            ) from error
+        if not candidate.is_file():
+            raise MicrotestError(f"candidate skill path does not exist: {raw_path}")
+        if candidate in seen:
+            raise MicrotestError(f"duplicate candidate skill path: {raw_path}")
+        seen.add(candidate)
+        paths.append(candidate)
+    return paths
+
+
+def candidate_skill_hash(paths: list[Path], repo_root: Path) -> str:
+    root = repo_root.resolve()
+    digest = hashlib.sha256()
+    for path in paths:
+        relative = path.resolve().relative_to(root).as_posix()
+        digest.update(relative.encode("utf-8") + b"\0")
+        digest.update(path.read_bytes() + b"\0")
+    return digest.hexdigest()
+
+
 def reject_secret_environment(value: Any, under_environment: bool = False) -> None:
     if isinstance(value, dict):
         for key, nested in value.items():
@@ -100,6 +142,7 @@ def validate_scenario(document: dict[str, Any]) -> None:
         "id",
         "control_prompt",
         "candidate_prompt",
+        "candidate_skill_paths",
         "rubric",
         "output_schema",
         "fixture_paths",
@@ -115,6 +158,8 @@ def validate_scenario(document: dict[str, Any]) -> None:
         raise MicrotestError("scenario id must contain lowercase letters, digits, or hyphens")
     if not isinstance(document["fixture_paths"], list):
         raise MicrotestError("scenario fixture_paths must be an array")
+    if not isinstance(document["candidate_skill_paths"], list):
+        raise MicrotestError("scenario candidate_skill_paths must be an array")
     rubric = document["rubric"]
     if not isinstance(rubric, dict):
         raise MicrotestError("scenario rubric must be an object")
@@ -158,26 +203,27 @@ def evidence_identity(
     provider: str,
     model: str,
     fixtures: list[Path],
+    candidate_skills: list[Path],
+    runs: int,
     runner_version: str = RUNNER_VERSION,
-) -> dict[str, str]:
+) -> dict[str, Any]:
     scenario_bytes = json.dumps(
         scenario, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
     return {
         "scenario": hashlib.sha256(scenario_bytes).hexdigest(),
-        "skill_hash": hashlib.sha256(
-            scenario["candidate_prompt"].encode("utf-8")
-        ).hexdigest(),
+        "skill_hash": candidate_skill_hash(candidate_skills, ROOT),
         "provider": provider,
         "model": model,
         "fixture_hash": fixture_hash(fixtures, FIXTURE_ROOT),
         "rubric_version": scenario["rubric"]["version"],
         "runner_version": runner_version,
+        "runs": runs,
     }
 
 
 def invalidation_reasons(
-    previous: dict[str, str], current: dict[str, str]
+    previous: dict[str, Any], current: dict[str, Any]
 ) -> list[str]:
     return [
         f"{field}_changed"
@@ -186,47 +232,55 @@ def invalidation_reasons(
     ]
 
 
-def build_codex_argv(temp_root: Path, schema: Path, output: Path) -> list[str]:
-    return [
-        "codex",
-        "exec",
-        "--ephemeral",
-        "--ignore-user-config",
-        "--ignore-rules",
-        "--sandbox",
-        "read-only",
-        "--ask-for-approval",
-        "never",
-        "-C",
-        str(temp_root),
-        "--output-schema",
-        str(schema),
-        "--output-last-message",
-        str(output),
-        "-",
-    ]
+def build_codex_launch(
+    temp_root: Path, schema: Path, output: Path, model: str
+) -> dict[str, Any]:
+    return {
+        "argv": [
+            "codex", "exec", "--ephemeral", "--ignore-user-config", "--ignore-rules",
+            "--sandbox", "read-only", "--ask-for-approval", "never",
+            "--model", model, "-C", str(temp_root), "--output-schema", str(schema),
+            "--output-last-message", str(output), "-",
+        ],
+        "cwd": str(temp_root),
+    }
 
 
-def build_claude_argv(temp_root: Path, schema: Path, output: Path) -> list[str]:
-    del temp_root, output
-    return [
-        "claude",
-        "--print",
-        "--bare",
-        "--tools",
-        "",
-        "--no-session-persistence",
-        "--permission-mode",
-        "dontAsk",
-        "--output-format",
-        "json",
-        "--json-schema",
-        str(schema),
-    ]
+def build_claude_launch(
+    temp_root: Path, schema: Path, output: Path, model: str
+) -> dict[str, Any]:
+    del output
+    return {
+        "argv": [
+            "claude", "--print", "--bare", "--tools", "", "--no-session-persistence",
+            "--permission-mode", "dontAsk", "--model", model,
+            "--output-format", "json", "--json-schema", str(schema),
+        ],
+        "cwd": str(temp_root),
+    }
 
 
 def provider_status(provider: str) -> str:
     return PROVIDER_STATUS[provider]
+
+
+def build_provider_prompt(
+    scenario: dict[str, Any],
+    variant: str,
+    sample_index: int,
+    candidate_skills: list[Path],
+    repo_root: Path,
+) -> str:
+    prompt = (
+        f"variant: {variant}\nsample_index: {sample_index}\n\n"
+        f"{scenario[f'{variant}_prompt']}\n"
+    )
+    if variant == "candidate":
+        root = repo_root.resolve()
+        for path in candidate_skills:
+            relative = path.resolve().relative_to(root).as_posix()
+            prompt += f"\n--- candidate skill: {relative}\n{path.read_text(encoding='utf-8')}"
+    return prompt
 
 
 def validate_provider_result(
@@ -275,26 +329,29 @@ def redact_value(value: Any, paths: list[Path]) -> Any:
 
 def execute_provider(
     provider: str,
+    model: str,
     scenario: dict[str, Any],
     schema: Path,
     fixtures: list[Path],
+    candidate_skills: list[Path],
     evidence_dir: Path,
+    raw_root: Path,
     variant: str,
     sample_index: int,
     active: dict[str, int],
     active_lock: threading.Lock,
 ) -> dict[str, Any]:
     sandbox_id = uuid.uuid4().hex
-    sandbox_parent = evidence_dir / "sandboxes"
-    sandbox_parent.mkdir(parents=True, exist_ok=True)
     with active_lock:
         active["current"] += 1
         active["maximum"] = max(active["maximum"], active["current"])
     try:
         with tempfile.TemporaryDirectory(
-            prefix=f"sample-{sandbox_id}-", dir=sandbox_parent
+            prefix=f"skill-microtest-provider-{sandbox_id}-"
         ) as raw_temp_root:
             temp_root = Path(raw_temp_root)
+            if temp_root.resolve() == ROOT.resolve() or ROOT.resolve() in temp_root.resolve().parents:
+                raise MicrotestError("OS temporary provider root is inside repository")
             for source in fixtures:
                 relative = source.resolve().relative_to(FIXTURE_ROOT.resolve())
                 destination = temp_root / relative
@@ -302,21 +359,19 @@ def execute_provider(
                 shutil.copy2(source, destination)
             output = temp_root / "provider-result.json"
             if provider == "codex":
-                argv = build_codex_argv(temp_root, schema, output)
+                launch = build_codex_launch(temp_root, schema, output, model)
             else:
-                argv = [
-                    sys.executable,
-                    str(ROOT / f"tests/skill-microtests/{provider}-provider.py"),
-                    "--output",
-                    str(output),
-                    "--variant",
-                    variant,
-                    "--sample-index",
-                    str(sample_index),
-                ]
-            prompt = (
-                f"variant: {variant}\nsample_index: {sample_index}\n\n"
-                f"{scenario[f'{variant}_prompt']}\n"
+                launch = {
+                    "argv": [
+                        sys.executable,
+                        str(ROOT / f"tests/skill-microtests/{provider}-provider.py"),
+                        "--output", str(output), "--variant", variant,
+                        "--sample-index", str(sample_index),
+                    ],
+                    "cwd": str(temp_root),
+                }
+            prompt = build_provider_prompt(
+                scenario, variant, sample_index, candidate_skills, ROOT
             )
             environment = {
                 "HOME": str(temp_root),
@@ -327,8 +382,8 @@ def execute_provider(
             }
             try:
                 result = subprocess.run(
-                    argv,
-                    cwd=temp_root,
+                    launch["argv"],
+                    cwd=launch["cwd"],
                     input=prompt,
                     env=environment,
                     text=True,
@@ -339,10 +394,14 @@ def execute_provider(
             except (OSError, subprocess.TimeoutExpired) as error:
                 raise MicrotestError(f"provider execution failed: {error}") from error
             raw_text = result.stdout + result.stderr
-            raw_relative = Path("raw") / f"run-{sample_index:02d}-{variant}.txt"
-            raw_path = evidence_dir / raw_relative
-            raw_path.parent.mkdir(parents=True, exist_ok=True)
-            raw_path.write_text(raw_text, encoding="utf-8")
+            raw_name = f"run-{sample_index:02d}-{variant}.txt"
+            raw_path = raw_root / raw_name
+            descriptor = os.open(
+                raw_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+            )
+            with os.fdopen(descriptor, "w", encoding="utf-8") as raw_file:
+                raw_file.write(raw_text)
+            raw_path.chmod(0o600)
             if result.returncode != 0:
                 raise MicrotestError(
                     f"provider failed for run {sample_index} {variant}: exit {result.returncode}"
@@ -351,12 +410,12 @@ def execute_provider(
             score, passed = validate_provider_result(
                 provider_result, scenario["rubric"]
             )
-            redaction_paths = [temp_root, evidence_dir, ROOT]
+            redaction_paths = [temp_root, raw_root, evidence_dir, ROOT]
             return {
                 "score": round(score, 6),
                 "passed": passed,
                 "sandbox_id": sandbox_id,
-                "raw_transcript": raw_relative.as_posix(),
+                "raw_transcript": f"[REDACTED_RAW_ROOT]/{raw_name}",
                 "transcript": redact_text(raw_text, redaction_paths),
                 "result": redact_value(provider_result, redaction_paths),
             }
@@ -379,14 +438,17 @@ def aggregate(samples: list[dict[str, Any]]) -> dict[str, float]:
     }
 
 
-def cache_state(cache_path: Path, identity: dict[str, str]) -> tuple[dict[str, Any] | None, list[str]]:
+def cache_state(cache_path: Path, identity: dict[str, Any]) -> tuple[dict[str, Any] | None, list[str]]:
     if not cache_path.exists():
         return None, ["no_passing_evidence"]
     try:
         previous = read_json(cache_path)
     except MicrotestError:
         return None, ["invalid_evidence"]
-    reasons = invalidation_reasons(previous.get("identity", {}), identity)
+    previous_identity = previous.get("identity")
+    if not isinstance(previous_identity, dict):
+        return None, ["invalid_evidence"]
+    reasons = invalidation_reasons(previous_identity, identity)
     if reasons:
         return None, reasons
     if not previous.get("passed"):
@@ -398,9 +460,11 @@ def base_report(
     scenario: dict[str, Any],
     provider: str,
     model: str,
-    identity: dict[str, str],
+    identity: dict[str, Any],
     max_cost_usd: float | None,
+    runs: int,
 ) -> dict[str, Any]:
+    reserved = 2 * runs * LIVE_CALL_RESERVATION_USD if provider in LIVE_PROVIDERS else None
     return {
         "schema_version": 1,
         "runner_version": RUNNER_VERSION,
@@ -410,7 +474,13 @@ def base_report(
             "name": provider,
             "model": model,
             "status": provider_status(provider),
-            "max_cost_usd": max_cost_usd if provider in LIVE_PROVIDERS else None,
+            "requested_max_cost_usd": max_cost_usd if provider in LIVE_PROVIDERS else None,
+            "reserved_cost_usd": reserved,
+            "cost_control": (
+                "conservative_preflight_reservation"
+                if provider in LIVE_PROVIDERS
+                else None
+            ),
         },
     }
 
@@ -420,23 +490,31 @@ def run_campaign(
     provider: str,
     model: str,
     fixtures: list[Path],
+    candidate_skills: list[Path],
     schema: Path,
     runs: int,
     concurrency: int,
     evidence_dir: Path,
     max_cost_usd: float | None,
-) -> dict[str, Any]:
-    identity = evidence_identity(scenario, provider, model, fixtures)
+) -> tuple[dict[str, Any], Path | None]:
+    identity = evidence_identity(
+        scenario, provider, model, fixtures, candidate_skills, runs
+    )
     evidence_dir.mkdir(parents=True, exist_ok=True)
     cache_path = evidence_dir / f"{scenario['id']}.json"
-    report = base_report(scenario, provider, model, identity, max_cost_usd)
+    report = base_report(scenario, provider, model, identity, max_cost_usd, runs)
     previous, reasons = cache_state(cache_path, identity)
     if previous is not None:
         reused = dict(previous)
         reused["cache"] = {"reused": True, "invalidation_reasons": []}
         reused["execution"] = dict(reused["execution"], provider_calls=0)
-        return reused
+        return reused, None
 
+    raw_root = Path(tempfile.mkdtemp(prefix="skill-microtest-raw-")).resolve()
+    if raw_root == ROOT.resolve() or ROOT.resolve() in raw_root.parents:
+        shutil.rmtree(raw_root)
+        raise MicrotestError("OS temporary raw root is inside repository")
+    raw_root.chmod(0o700)
     active = {"current": 0, "maximum": 0}
     active_lock = threading.Lock()
     samples = [{"run": index} for index in range(1, runs + 1)]
@@ -450,10 +528,13 @@ def run_campaign(
             executor.submit(
                 execute_provider,
                 provider,
+                model,
                 scenario,
                 schema,
                 fixtures,
+                candidate_skills,
                 evidence_dir,
+                raw_root,
                 variant,
                 index,
                 active,
@@ -478,18 +559,24 @@ def run_campaign(
         }
     )
     cache_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return report
+    return report, raw_root
 
 
 def claude_report(
     scenario: dict[str, Any],
     model: str,
     fixtures: list[Path],
+    candidate_skills: list[Path],
+    runs: int,
     max_cost_usd: float,
     evidence_dir: Path,
 ) -> dict[str, Any]:
-    identity = evidence_identity(scenario, "claude", model, fixtures)
-    report = base_report(scenario, "claude", model, identity, max_cost_usd)
+    identity = evidence_identity(
+        scenario, "claude", model, fixtures, candidate_skills, runs
+    )
+    report = base_report(
+        scenario, "claude", model, identity, max_cost_usd, runs
+    )
     report.update(
         {
             "cache": {"reused": False, "invalidation_reasons": ["not_live_tested"]},
@@ -516,8 +603,19 @@ def validate_limits(args: argparse.Namespace) -> None:
     if args.provider in LIVE_PROVIDERS:
         if not args.confirm_cost:
             raise MicrotestError("live providers require --confirm-cost")
-        if args.max_cost_usd is None or args.max_cost_usd <= 0:
-            raise MicrotestError("live providers require positive --max-cost-usd")
+        if (
+            args.max_cost_usd is None
+            or not math.isfinite(args.max_cost_usd)
+            or args.max_cost_usd <= 0
+        ):
+            raise MicrotestError("live providers require finite positive --max-cost-usd")
+        reserved = 2 * args.runs * LIVE_CALL_RESERVATION_USD
+        if args.max_cost_usd < reserved:
+            raise MicrotestError(
+                f"max-cost-usd is below reserved live cost: {reserved:.2f}"
+            )
+    if args.provider == "codex" and not args.model:
+        raise MicrotestError("Codex live provider requires explicit --model")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -545,6 +643,9 @@ def main() -> int:
         scenario = read_json(args.scenario)
         validate_scenario(scenario)
         fixtures = validate_fixture_paths(scenario["fixture_paths"], FIXTURE_ROOT)
+        candidate_skills = validate_candidate_skill_paths(
+            scenario["candidate_skill_paths"], ROOT
+        )
         schema_root = SCHEMA_ROOT.resolve()
         schema = (ROOT / scenario["output_schema"]).resolve()
         try:
@@ -556,29 +657,34 @@ def main() -> int:
         model = args.model or {
             "fake": "fake-v1",
             "replay": "replay-v1",
-            "codex": "inherited",
-            "claude": "inherited",
+            "codex": "",
+            "claude": "not-live-tested",
         }[args.provider]
         if args.provider == "claude":
             report = claude_report(
                 scenario,
                 model,
                 fixtures,
+                candidate_skills,
+                args.runs,
                 args.max_cost_usd,
                 args.evidence_dir.resolve(),
             )
         else:
-            report = run_campaign(
+            report, raw_root = run_campaign(
                 scenario,
                 args.provider,
                 model,
                 fixtures,
+                candidate_skills,
                 schema,
                 args.runs,
                 args.concurrency,
                 args.evidence_dir.resolve(),
                 args.max_cost_usd,
             )
+            if raw_root is not None:
+                print(f"raw_transcript_root={raw_root}", file=sys.stderr)
     except MicrotestError as error:
         print(f"skill microtest error: {error}", file=sys.stderr)
         return 2
