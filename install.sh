@@ -32,6 +32,7 @@ KNOWN_SKILLS=(
   brainstorming dispatching-parallel-agents
   document-release executing-plans finishing-a-development-branch
   getting-up-to-speed memory-curator project-init
+  product-definition
   receiving-code-review requesting-code-review research-driven-development
   session-handoff stress-test subagent-driven-development
   systematic-debugging test-driven-development using-git-worktrees

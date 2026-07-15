@@ -48,6 +48,7 @@ Underneath all of it is a production-grade standard: the agent treats every task
 | -------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `brainstorming`                  | Socratic design session before any code — produces a spec bead                                                       |
 | `stress-test`                    | Adversarial interrogation of plans with recommended answers                                                          |
+| `product-definition`             | Conditionally establishes approved product truth before solution design                                               |
 | `writing-plans`                  | Breaks work into bite-sized tasks, each tracked as a `bd` bead                                                       |
 | `executing-plans`                | Batch plan execution in a single session                                                                             |
 | `using-git-worktrees`            | Isolated development branches per task                                                                               |

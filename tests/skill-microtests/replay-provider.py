@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 
 
@@ -13,7 +14,26 @@ def main() -> int:
     parser.add_argument("--variant", choices=("control", "candidate"), required=True)
     parser.add_argument("--sample-index", type=int, required=True)
     args = parser.parse_args()
-    if args.variant == "candidate":
+    prompt = sys.stdin.read()
+    if "product-definition-contract-v1" in prompt and args.variant == "candidate":
+        scores = {
+            "actors": 1.0,
+            "authority": 1.0,
+            "lifecycle": 1.0,
+            "counterexamples": 1.0,
+            "stable_ids": 1.0,
+        }
+        summary = "Candidate preserves product truth across all rubric boundaries."
+    elif "product-definition-contract-v1" in prompt:
+        scores = {
+            "actors": 0.0,
+            "authority": 0.0,
+            "lifecycle": 0.0,
+            "counterexamples": 0.0,
+            "stable_ids": 0.0,
+        }
+        summary = "Control skips the product contract boundaries."
+    elif args.variant == "candidate":
         scores = {"vertical_slice": 1.0, "outcome_trace": 1.0}
         summary = "Candidate preserves outcome trace and vertical slices."
     else:

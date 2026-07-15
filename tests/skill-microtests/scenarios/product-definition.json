@@ -1,0 +1,24 @@
+{
+  "id": "product-definition-contract",
+  "control_prompt": "product-definition-contract-v1 control: Turn the supplied requirements into implementation-oriented design notes.",
+  "candidate_prompt": "product-definition-contract-v1 candidate: Follow the product-definition skill. Normalize all supplied facts without repeating resolved questions; preserve actors, authority, lifecycle, counterexamples, and stable outcome IDs.",
+  "candidate_skill_paths": [
+    "skills/product-definition/SKILL.md",
+    "skills/product-definition/product-contract-template.md"
+  ],
+  "rubric": {
+    "version": "1",
+    "pass_score": 1.0,
+    "criteria": [
+      {"id": "actors", "weight": 0.2},
+      {"id": "authority", "weight": 0.2},
+      {"id": "lifecycle", "weight": 0.2},
+      {"id": "counterexamples", "weight": 0.2},
+      {"id": "stable_ids", "weight": 0.2}
+    ]
+  },
+  "output_schema": "tests/skill-microtests/schemas/result.schema.json",
+  "fixture_paths": [
+    "product-definition/request.md"
+  ]
+}

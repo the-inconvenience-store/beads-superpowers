@@ -223,6 +223,7 @@ This plugin uses `bd` (beads) for ALL task tracking.
 | using-superpowers              | Bootstrap — loaded at session start, routes to other skills                                                                 |
 | brainstorming                  | Socratic design before code — creates session beads                                                                         |
 | stress-test                    | Adversarial design interrogation with recommended answers                                                                   |
+| product-definition             | Conditional product contract for actors, authority, lifecycle, counterexamples, and stable outcomes                         |
 | writing-plans                  | Bite-sized task plans — each task becomes a bead                                                                            |
 | subagent-driven-development    | Fresh agent per task + single task review (spec + quality verdicts); parallel batch mode for independent tasks              |
 | executing-plans                | Batch execution in single session                                                                                           |
