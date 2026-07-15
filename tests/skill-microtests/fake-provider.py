@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import sys
 import time
 from pathlib import Path
 
@@ -14,6 +15,10 @@ def main() -> int:
     parser.add_argument("--variant", choices=("control", "candidate"), required=True)
     parser.add_argument("--sample-index", type=int, required=True)
     args = parser.parse_args()
+    prompt = sys.stdin.read()
+    if "FAIL_PROVIDER" in prompt:
+        print("deterministic provider failure")
+        return 7
     time.sleep(0.08)
     if args.variant == "candidate":
         vertical = 0.75 if args.sample_index % 2 else 1.0

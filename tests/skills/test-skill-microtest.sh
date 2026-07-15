@@ -62,7 +62,12 @@ repo = tmp / "repo"
 (repo / "skills/two").mkdir(parents=True)
 (repo / "skills/one/SKILL.md").write_text("one\n", encoding="utf-8")
 (repo / "skills/two/SKILL.md").write_text("two\n", encoding="utf-8")
-(repo / "skills/escape").symlink_to(outside)
+(repo / "skills/one/data.txt").write_text("not markdown\n", encoding="utf-8")
+(repo / "skills/.hidden.md").write_text("hidden\n", encoding="utf-8")
+(repo / "README.md").write_text("outside skills\n", encoding="utf-8")
+(repo / ".env").write_text("synthetic_value=not-a-secret\n", encoding="utf-8")
+(repo / "skills/symlink.md").symlink_to(repo / "skills/one/SKILL.md")
+(repo / "skills/link-parent").symlink_to(repo / "skills/one", target_is_directory=True)
 skill_paths = module.validate_candidate_skill_paths(
     ["skills/one/SKILL.md", "skills/two/SKILL.md"], repo
 )
@@ -82,8 +87,13 @@ assert "one changed" not in module.build_provider_prompt(
     prompt_scenario, "control", 1, skill_paths, repo
 )
 for unsafe_paths in (
+    [".env"],
+    ["README.md"],
+    ["skills/one/data.txt"],
+    ["skills/.hidden.md"],
     ["../outside.txt"],
-    ["skills/escape"],
+    ["skills/symlink.md"],
+    ["skills/link-parent/SKILL.md"],
     ["skills/missing/SKILL.md"],
     ["skills/one/SKILL.md", "skills/one/SKILL.md"],
 ):
@@ -133,11 +143,27 @@ Path(sys.argv[2]).write_text(json.dumps(document), encoding="utf-8")
 PY
 }
 
+snapshot_microtest_roots() {
+  python3 - <<'PY'
+import tempfile
+from pathlib import Path
+
+temp_root = Path(tempfile.gettempdir())
+roots = sorted(
+    str(path.resolve())
+    for pattern in ("skill-microtest-provider-*", "skill-microtest-raw-*")
+    for path in temp_root.glob(pattern)
+)
+print("\n".join(roots))
+PY
+}
+
 expect_preflight_failure() {
   local label="$1"
   local pattern="$2"
   shift 2
   local evidence="$TMP/preflight-$label"
+  snapshot_microtest_roots >"$TMP/$label.roots-before"
   if python3 "$RUNNER" "$@" --evidence-dir "$evidence" >"$TMP/$label.out" 2>&1; then
     echo "FAIL: $label passed preflight" >&2
     exit 1
@@ -147,8 +173,13 @@ expect_preflight_failure() {
     cat "$TMP/$label.out" >&2
     exit 1
   }
-  if [[ -d "$evidence/raw" ]] && find "$evidence/raw" -type f -print -quit | grep -q .; then
-    echo "FAIL: $label executed a provider before failing" >&2
+  snapshot_microtest_roots >"$TMP/$label.roots-after"
+  if ! cmp -s "$TMP/$label.roots-before" "$TMP/$label.roots-after"; then
+    echo "FAIL: $label created a provider/raw OS-temp root" >&2
+    exit 1
+  fi
+  if [[ -e "$evidence" ]]; then
+    echo "FAIL: $label created durable evidence before failing" >&2
     exit 1
   fi
 }
@@ -183,6 +214,38 @@ expect_preflight_failure cost-reservation 'reserved live cost|max-cost-usd' \
 expect_preflight_failure codex-model 'Codex.*--model|--model.*Codex' \
   --scenario "$SCENARIO" --provider codex --runs 1 --max-runs 5 --concurrency 1 \
   --confirm-cost --max-cost-usd 2
+
+for candidate_case in env outside-skills non-markdown; do
+  case "$candidate_case" in
+    env) candidate_path='.env' ;;
+    outside-skills) candidate_path='README.md' ;;
+    non-markdown) candidate_path='package.json' ;;
+  esac
+  make_scenario "$TMP/candidate-$candidate_case.json" '["writing-plans/request.md"]' \
+    "{\"candidate_skill_paths\":[\"$candidate_path\"]}"
+  expect_preflight_failure "candidate-$candidate_case" 'candidate skill path' \
+    --scenario "$TMP/candidate-$candidate_case.json" --provider replay \
+    --runs 1 --max-runs 5 --concurrency 1
+done
+
+make_scenario "$TMP/provider-failure.json" '["writing-plans/request.md"]' \
+  '{"control_prompt":"FAIL_PROVIDER"}'
+snapshot_microtest_roots >"$TMP/provider-failure.roots-before"
+if python3 "$RUNNER" --scenario "$TMP/provider-failure.json" --provider fake \
+    --runs 1 --max-runs 5 --concurrency 1 --evidence-dir "$TMP/provider-failure-evidence" \
+    >"$TMP/provider-failure.out" 2>&1; then
+  echo "FAIL: deterministic failing provider passed" >&2
+  exit 1
+fi
+grep -q 'provider failed' "$TMP/provider-failure.out" || {
+  echo "FAIL: deterministic failing provider error was imprecise" >&2
+  exit 1
+}
+snapshot_microtest_roots >"$TMP/provider-failure.roots-after"
+cmp -s "$TMP/provider-failure.roots-before" "$TMP/provider-failure.roots-after" || {
+  echo "FAIL: failed provider left an OS-temp provider/raw root" >&2
+  exit 1
+}
 
 EVIDENCE="$TMP/replay-evidence"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider replay --runs 5 \

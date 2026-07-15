@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 
-RUNNER_VERSION = "2"
+RUNNER_VERSION = "3"
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_ROOT = ROOT / "tests/fixtures/skill-microtests/allowed"
 SCHEMA_ROOT = ROOT / "tests/skill-microtests/schemas"
@@ -87,20 +87,38 @@ def validate_candidate_skill_paths(raw_paths: list[str], repo_root: Path) -> lis
     if not isinstance(raw_paths, list) or not raw_paths:
         raise MicrotestError("candidate_skill_paths must be a non-empty array")
     root = repo_root.resolve()
+    lexical_skills_root = root / "skills"
+    if lexical_skills_root.is_symlink() or not lexical_skills_root.is_dir():
+        raise MicrotestError("trusted skills root must be a real directory")
+    skills_root = lexical_skills_root.resolve()
     paths: list[Path] = []
     seen: set[Path] = set()
     for raw_path in raw_paths:
         if not isinstance(raw_path, str) or not raw_path:
             raise MicrotestError("candidate skill path must be a non-empty string")
         relative = Path(raw_path)
-        if relative.is_absolute() or ".." in relative.parts:
-            raise MicrotestError(f"candidate skill path escapes repository: {raw_path}")
+        parts = relative.parts
+        if (
+            relative.is_absolute()
+            or not parts
+            or parts[0] != "skills"
+            or ".." in parts
+            or any(part.startswith(".") for part in parts)
+            or relative.suffix != ".md"
+        ):
+            raise MicrotestError(f"candidate skill path must be non-hidden Markdown beneath skills/: {raw_path}")
+        for index in range(1, len(parts) + 1):
+            component = root.joinpath(*parts[:index])
+            if component.is_symlink():
+                raise MicrotestError(
+                    f"candidate skill path traverses a symlink: {raw_path}"
+                )
         candidate = (root / relative).resolve()
         try:
-            candidate.relative_to(root)
+            candidate.relative_to(skills_root)
         except ValueError as error:
             raise MicrotestError(
-                f"candidate skill path escapes repository: {raw_path}"
+                f"candidate skill path escapes trusted skills root: {raw_path}"
             ) from error
         if not candidate.is_file():
             raise MicrotestError(f"candidate skill path does not exist: {raw_path}")
@@ -515,50 +533,56 @@ def run_campaign(
         shutil.rmtree(raw_root)
         raise MicrotestError("OS temporary raw root is inside repository")
     raw_root.chmod(0o700)
-    active = {"current": 0, "maximum": 0}
-    active_lock = threading.Lock()
-    samples = [{"run": index} for index in range(1, runs + 1)]
-    work = [
-        (index, variant)
-        for index in range(1, runs + 1)
-        for variant in ("control", "candidate")
-    ]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
-        futures = {
-            executor.submit(
-                execute_provider,
-                provider,
-                model,
-                scenario,
-                schema,
-                fixtures,
-                candidate_skills,
-                evidence_dir,
-                raw_root,
-                variant,
-                index,
-                active,
-                active_lock,
-            ): (index, variant)
-            for index, variant in work
-        }
-        for future in concurrent.futures.as_completed(futures):
-            index, variant = futures[future]
-            samples[index - 1][variant] = future.result()
+    try:
+        active = {"current": 0, "maximum": 0}
+        active_lock = threading.Lock()
+        samples = [{"run": index} for index in range(1, runs + 1)]
+        work = [
+            (index, variant)
+            for index in range(1, runs + 1)
+            for variant in ("control", "candidate")
+        ]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+            futures = {
+                executor.submit(
+                    execute_provider,
+                    provider,
+                    model,
+                    scenario,
+                    schema,
+                    fixtures,
+                    candidate_skills,
+                    evidence_dir,
+                    raw_root,
+                    variant,
+                    index,
+                    active,
+                    active_lock,
+                ): (index, variant)
+                for index, variant in work
+            }
+            for future in concurrent.futures.as_completed(futures):
+                index, variant = futures[future]
+                samples[index - 1][variant] = future.result()
 
-    report.update(
-        {
-            "cache": {"reused": False, "invalidation_reasons": reasons},
-            "execution": {
-                "provider_calls": len(work),
-                "max_observed_concurrency": active["maximum"],
-            },
-            "samples": samples,
-            "aggregate": aggregate(samples),
-            "passed": all(sample["candidate"]["passed"] for sample in samples),
-        }
-    )
-    cache_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        report.update(
+            {
+                "cache": {"reused": False, "invalidation_reasons": reasons},
+                "execution": {
+                    "provider_calls": len(work),
+                    "max_observed_concurrency": active["maximum"],
+                },
+                "samples": samples,
+                "aggregate": aggregate(samples),
+                "passed": all(sample["candidate"]["passed"] for sample in samples),
+            }
+        )
+        cache_path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+    except BaseException:
+        shutil.rmtree(raw_root, ignore_errors=True)
+        raise
     return report, raw_root
 
 
