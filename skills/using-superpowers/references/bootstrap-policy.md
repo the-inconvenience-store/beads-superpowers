@@ -1,5 +1,7 @@
 # Bootstrap Policy Details
 
+Shared session semantics are defined once in `session-policy.md`. This file owns only bootstrap branches: production posture, ADR offers, and asking the user.
+
 ## Production-Grade Doctrine
 
 Treat every project as a production system with real users, no matter how small it looks. You MUST NOT silently take a shortcut, descope a required behavior/edge-case, or accept a material-risk trade-off — surface it and let your human partner decide. You MUST NOT weaken, bypass, or remove a security control or introduce a vulnerability; a security regression is never acceptable, even for a deadline.

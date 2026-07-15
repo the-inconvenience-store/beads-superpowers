@@ -8,11 +8,7 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 </SUBAGENT-STOP>
 
 <EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
-
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
-
-This is not negotiable. You cannot rationalize your way out of this.
+If there is even a 1% chance a skill applies, invoke it. Applicable skills are mandatory; do not rationalize around them.
 </EXTREMELY-IMPORTANT>
 
 ## The Rule
@@ -52,6 +48,8 @@ For hard-to-reverse, surprising trade-offs, offer an ADR in `docs/decisions`; ne
 ## Beads
 
 `bd` (beads) is the task tracker for ALL work — TodoWrite is forbidden, as are TaskCreate and markdown TODOs. The session hook injects composed beads context (curated memories + workflow pointer) at session start; if none was injected this session, run `bd prime`. Only the orchestrating agent manages beads — subagents never touch them. Include bead IDs in commit messages. Session close = land the plane: `bd close` → `bd dolt push` → `git pull --rebase && git push` → `git status`.
+
+Shared capture, memory, Beads-economy, claim-boundary, and completion meanings are owned by `references/session-policy.md`.
 
 ## Platform Adaptation
 
