@@ -9,6 +9,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-07-21
+
+### Fixed
+
+- **Plan validation no longer creates duplicate Beads epics.** `writing-plans` now directs agents to `./skills/writing-plans/scripts/validate.sh <graph>` and warns that `bd create --graph <graph> --dry-run` writes issues.
+
 ## [0.13.0] - 2026-07-15
 
 ### Added

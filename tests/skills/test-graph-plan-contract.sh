@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-VALIDATOR="$ROOT/skills/writing-plans/scripts/validate-graph-plan.py"
+VALIDATOR="$ROOT/skills/writing-plans/scripts/validate.sh"
 FIXTURES="$ROOT/tests/fixtures/graph-plans"
 SKILL="$ROOT/skills/writing-plans/SKILL.md"
 TEMPLATE="$ROOT/skills/writing-plans/slice-contract-template.md"
@@ -11,13 +11,13 @@ SCENARIO="$ROOT/tests/skill-microtests/scenarios/writing-plans-vertical.json"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-python3 "$VALIDATOR" "$FIXTURES/valid-vertical.json" | tee "$TMP/valid.out"
+"$VALIDATOR" "$FIXTURES/valid-vertical.json" | tee "$TMP/valid.out"
 grep -Fq "2 tasks" "$TMP/valid.out"
 grep -Fq "1 outcomes" "$TMP/valid.out"
 
 expect_failure() {
   local fixture="$1" section="$2" reason="$3"
-  if python3 "$VALIDATOR" "$FIXTURES/$fixture.json" >"$TMP/$fixture.out" 2>&1; then
+  if "$VALIDATOR" "$FIXTURES/$fixture.json" >"$TMP/$fixture.out" 2>&1; then
     echo "FAIL: $fixture unexpectedly passed" >&2
     exit 1
   fi
@@ -36,6 +36,12 @@ grep -Fq "one graph producer" "$SKILL"
 grep -Fq "first consumer" "$SKILL"
 grep -Fq "resource conflicts are not dependency edges" "$SKILL"
 grep -Fq "full-code snippets" "$SKILL"
+grep -Fq "creates issues, including duplicate epics" "$SKILL"
+grep -Fq "scripts/validate.sh <graph>" "$SKILL"
+if grep -Fq 'Run `python3 ./skills/writing-plans/scripts/validate-graph-plan.py <graph>` and `bd create --graph <graph> --dry-run`' "$SKILL"; then
+  echo "FAIL: skill still instructs the unsafe graph-import dry run" >&2
+  exit 1
+fi
 
 EVIDENCE="$TMP/evidence"
 python3 "$RUNNER" --scenario "$SCENARIO" --provider fake --runs 2 \

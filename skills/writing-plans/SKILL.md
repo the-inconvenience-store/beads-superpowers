@@ -45,7 +45,7 @@ Beads `blocks` edges express execution prerequisites; **resource conflicts are n
 3. **Choose vertical boundaries.** Start with the thinnest end-to-end behavior. Fold horizontal setup into its first consuming slice. Split only where a reviewer could reject one result while accepting its neighbor.
 4. **Declare dependencies and resources.** Add `blocks` only for semantic prerequisites. Record allowed writes, exclusivity, capacity, and any safe speculative contract independently.
 5. **Write the graph.** Read [slice-contract-template.md](slice-contract-template.md) now. Save `docs/plans/YYYY-MM-DD-<feature>.graph.json`; this JSON is the sole plan of record.
-6. **Validate before import.** Run `python3 ./skills/writing-plans/scripts/validate-graph-plan.py <graph>` and `bd create --graph <graph> --dry-run`. Fix every structural, verticality, outcome, DAG, or resource error.
+6. **Validate before import.** Run `./skills/writing-plans/scripts/validate.sh <graph>`. Do **not** run `bd create --graph <graph> --dry-run`: its dry run creates issues, including duplicate epics. Fix every structural, verticality, outcome, DAG, or resource error before the single approved import.
 7. **Review.** Self-review outcome ownership, earliest seams, final gates, evidence non-substitution, placeholders, interface consistency, write conflicts, and speculative cost. Offer stress-test at the plan review gate; revalidate after any edit.
 8. **Import once.** After approval, run `bd create --graph <graph>` once. Record the epic/task IDs and confirm imported descriptions match the graph.
 9. **Hand off execution.** Offer subagent-driven or inline execution and pass only the epic ID, graph path, and governing revisions.
@@ -70,7 +70,7 @@ The graph is ready only when:
 - parallel-ready tasks have disjoint writes/exclusive resources or explicit scheduling constraints;
 - required evidence classes are not substituted by lower-level checks;
 - `FAIL`, `BLOCKED`, `UNTESTED`, `SKIPPED`, or stale evidence leaves its outcome open; and
-- validator, dry-run import, and user review pass.
+- validator and user review pass.
 
 Use the standard three-option plan review: Approved + stress-test, Approved, or Needs changes. Stress-test edits the graph artifact before revalidation; it does not import beads.
 
