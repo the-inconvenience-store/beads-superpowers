@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "lineage_id": "TASK-C",
+  "outcome_ids": ["TASK-C"],
+  "finding_ancestry": [],
+  "task_ids": ["task-independent"],
+  "failed_rounds": 0
+}

@@ -19,24 +19,24 @@ The reviewer is read-only. It does not mutate source, Git, reports, or Beads. Us
 `./task-reviewer-prompt.md` returns one acceptance matrix plus spec-compliance and code-quality verdicts. Every finding has:
 
 ```text
-finding_id, severity, acceptance_ids, classification, evidence,
+finding_id, finding_ancestry, severity, acceptance_ids, classification, evidence,
 invalidated_assumption, correction, counterexample, contract_hash, review_round
 ```
 
 Classification is one of `contract-gap`, `implementation-defect`, `evidence-gap`, `integration-defect`, or `reviewer-disagreement`. Security regressions are Critical. Evidence names the exact line, artifact, command result, or reproducible observation; a rationale in the implementer report never lowers severity.
 
-Each review round uses a fresh reviewer context. The implementer may retain the same task identity only while the six-field Context Manifest identity remains unchanged.
+Each review round uses a fresh reviewer context. `finding_ancestry` is the stable root-to-current finding chain and survives replacement task IDs. The implementer may retain the same task identity only while the six-field Context Manifest identity remains unchanged.
 
 ## Two-Round Correction Limit
 
-After two failed review rounds, ordinary correction stops and diagnosis is mandatory.
+After two failed review rounds in one outcome lineage, ordinary correction stops and diagnosis is mandatory. The controller persists outcome IDs, finding ancestry, task IDs, and cumulative failed rounds; creating or nesting a replacement task does not reset the budget.
 
 Round 1 failure: technically evaluate findings, send one consolidated correction to the same-task implementer lineage, gather fresh evidence, then use a fresh reviewer.
 
 Before every correction dispatch, run:
 
 ```bash
-python3 "$PWD/skills/subagent-driven-development/scripts/sdd-evidence.py" check-dispatch LEDGER.json
+python3 "$PWD/skills/subagent-driven-development/scripts/sdd-evidence.py" check-dispatch LEDGER.json --lineage OUTCOME_LINEAGE.json
 ```
 
 A nonzero result forbids another ordinary correction in that lineage; checking only at closure is too late.
@@ -48,7 +48,7 @@ Round 2 failure: stop normal correction. Record exactly one diagnostic before an
 - `resolve-product-decision` — a user-owned behavior is undecided;
 - `adjudicate-reviewer` — evidence supports a concrete reviewer disagreement.
 
-The diagnostic names a new task or contract strategy and sets dispatch disallowed for the old lineage. A third ordinary “try again” round is forbidden. A new task/contract starts with a new manifest and fresh implementer context.
+The diagnostic names a new task or contract strategy and sets dispatch disallowed for the old lineage. A third ordinary “try again” round is forbidden. Use a shallow correction bead under the owning task. Create a new implementation task only for a genuinely independent outcome or diagnosed contract split; carry the originating finding ancestry when it is still corrective work.
 
 ## Evidence Ledger
 

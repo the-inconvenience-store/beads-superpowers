@@ -47,7 +47,7 @@ For each ready task:
    - `CONTRACT_READY`: identity, outcome IDs, invariants, interfaces, and confirmation that no implementation-changing decision remains open.
    - `NEEDS_CONTEXT`: missing/conflicting field, evidence conflict, affected choices, and decision owner. It must not edit.
 5. **Implement and report.** After `CONTRACT_READY`, the worker follows the task-specific skills, changes only the allowed write set, verifies the named criteria, commits if authorized, and writes only the generated report paths named separately in the manifest.
-6. **Review before closure.** Run `sdd-manifest.py check-diff` on the exact `BASE..HEAD` range before creating the review package. Persist the report, generate a bounded review package, and dispatch the single read-only task reviewer. Before any correction dispatch, run the reference's `check-dispatch` gate; a failed gate requires diagnosis and a new task/contract lineage rather than another ordinary retry. Follow [references/review-evidence.md](references/review-evidence.md).
+6. **Review before closure.** Run `sdd-manifest.py check-diff` on the exact `BASE..HEAD` range before creating the review package. Persist the report, generate a bounded review package, and dispatch the read-only task reviewer. Before any correction dispatch, run the reference's `check-dispatch` gate with the persisted outcome lineage; a failed gate requires diagnosis rather than a replacement task that resets the budget. Follow [references/review-evidence.md](references/review-evidence.md).
 7. **Integrate approved work.** Merge approved task commits one at a time, run the integration checkpoint, release resources, close the task with its commit range and review evidence, then recompute ready work.
 
 When more than one task is ready, route through [references/scheduling.md](references/scheduling.md). Do not load that reference for a single ready task.
@@ -69,7 +69,7 @@ python3 "$PWD/skills/subagent-driven-development/scripts/sdd-manifest.py" bind \
 
 A correction may return to the same worker only when all six values are unchanged; append a correction lineage entry. Any changed task, contract, base, worktree, workflow version, or graph hash requires a fresh manifest and fresh worker. After two failed review rounds on one finding, stop recycling the context: diagnose whether the task, evidence, model capability, or contract is wrong and escalate the decision.
 
-When a legitimate correction needs a new path, use `sdd-manifest.py amend` with the graph task, exact path, and rationale. It rejects overlap with another task, records the amendment, recalculates `write_scope_hash` and `contract_hash`, and therefore requires a fresh context. Never broaden scope with an adjacent-file or directory wildcard.
+When a legitimate correction needs a new path, use `sdd-manifest.py amend` with the graph task, exact path, and rationale. It rejects overlap with another task, records the amendment, recalculates `write_scope_hash` and `contract_hash`, and therefore requires a fresh context. Keep ordinary correction beads shallow beneath the owning task; only a diagnosed independent outcome or contract split creates another implementation task. Never broaden scope with an adjacent-file or directory wildcard.
 
 ## Status Handling
 

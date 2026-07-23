@@ -26,9 +26,13 @@ EVIDENCE_FIELDS = {
 }
 ROUND_FIELDS = {"round", "result", "reviewer_context_id", "findings"}
 FINDING_FIELDS = {
-    "finding_id", "severity", "acceptance_ids", "classification", "evidence",
+    "finding_id", "finding_ancestry", "severity", "acceptance_ids", "classification", "evidence",
     "invalidated_assumption", "correction", "counterexample", "contract_hash",
     "review_round",
+}
+LINEAGE_FIELDS = {
+    "schema_version", "lineage_id", "outcome_ids", "finding_ancestry",
+    "task_ids", "failed_rounds",
 }
 DIAGNOSTIC_FIELDS = {
     "result", "strategy", "next_task_id", "next_contract_hash", "dispatch_allowed",
@@ -139,6 +143,15 @@ def validate_finding(
         "counterexample",
     ):
         nonempty_string(value[field], f"{name}.{field}")
+    ancestry = value["finding_ancestry"]
+    if (
+        not isinstance(ancestry, list)
+        or not ancestry
+        or any(not isinstance(item, str) or not item for item in ancestry)
+        or len(set(ancestry)) != len(ancestry)
+        or ancestry[-1] != value["finding_id"]
+    ):
+        raise EvidenceError(f"{name}.finding_ancestry: expected unique ancestry ending in finding_id")
     if value["severity"] not in {"Critical", "Important", "Minor"}:
         raise EvidenceError(f"{name}.severity: invalid severity")
     if value["classification"] not in CLASSIFICATIONS:
@@ -319,25 +332,53 @@ def check(ledger: dict[str, Any], gate_name: str, label: str) -> tuple[bool, lis
     return True, [f"PASS {label}: {ids}"]
 
 
-def check_dispatch(ledger: dict[str, Any]) -> tuple[bool, list[str]]:
+def validate_lineage(value: dict[str, Any]) -> dict[str, Any]:
+    lineage = require_fields(value, LINEAGE_FIELDS, "outcome_lineage")
+    if lineage["schema_version"] != 1:
+        raise EvidenceError("outcome_lineage.schema_version: expected 1")
+    nonempty_string(lineage["lineage_id"], "outcome_lineage.lineage_id")
+    for field in ("outcome_ids", "task_ids"):
+        items = lineage[field]
+        if (
+            not isinstance(items, list)
+            or not items
+            or any(not isinstance(item, str) or not item for item in items)
+            or len(set(items)) != len(items)
+        ):
+            raise EvidenceError(f"outcome_lineage.{field}: expected unique non-empty strings")
+    ancestry = lineage["finding_ancestry"]
+    if (
+        not isinstance(ancestry, list)
+        or any(not isinstance(item, str) or not item for item in ancestry)
+        or len(set(ancestry)) != len(ancestry)
+    ):
+        raise EvidenceError("outcome_lineage.finding_ancestry: expected unique strings")
+    if isinstance(lineage["failed_rounds"], bool) or not isinstance(lineage["failed_rounds"], int) or lineage["failed_rounds"] < 0:
+        raise EvidenceError("outcome_lineage.failed_rounds: expected non-negative integer")
+    return lineage
+
+
+def check_dispatch(ledger: dict[str, Any], lineage: dict[str, Any]) -> tuple[bool, list[str]]:
     validate_ledger(ledger)
-    failed_rounds = sum(
-        round_record["result"] == "FAIL" for round_record in ledger["review_rounds"]
-    )
+    lineage = validate_lineage(lineage)
+    failed_rounds = lineage["failed_rounds"]
     if failed_rounds >= 2:
         return False, [
             "FAIL dispatch",
-            "- dispatch disallowed for the old lineage after two failed review rounds; record the diagnostic and create the named new task or contract identity",
+            f"- outcome lineage {lineage['lineage_id']} is exhausted after two failed review rounds across tasks {', '.join(lineage['task_ids'])}; diagnose instead of resetting the budget with a replacement task",
         ]
-    return True, ["PASS dispatch: ordinary correction remains within the two-round limit"]
+    return True, [f"PASS dispatch: outcome lineage {lineage['lineage_id']} remains within the two-round limit"]
 
 
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
-    for command in ("check-task", "check-epic", "check-dispatch"):
+    for command in ("check-task", "check-epic"):
         child = commands.add_parser(command)
         child.add_argument("ledger", type=Path)
+    dispatch = commands.add_parser("check-dispatch")
+    dispatch.add_argument("ledger", type=Path)
+    dispatch.add_argument("--lineage", type=Path, required=True)
     return root
 
 
@@ -350,7 +391,7 @@ def main() -> int:
         elif args.command == "check-epic":
             passed, lines = check(ledger, "epic_gate", "epic")
         else:
-            passed, lines = check_dispatch(ledger)
+            passed, lines = check_dispatch(ledger, read_json(args.lineage))
     except EvidenceError as exc:
         print(f"sdd evidence error: {exc}", file=sys.stderr)
         return 1

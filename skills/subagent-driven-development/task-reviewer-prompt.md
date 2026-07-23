@@ -33,6 +33,7 @@ Review method
 Finding contract
 Every finding contains exactly:
 - finding_id
+- finding_ancestry: stable root-to-current finding IDs; preserve the root across replacement tasks
 - severity: Critical | Important | Minor
 - acceptance_ids
 - classification: contract-gap | implementation-defect | evidence-gap | integration-defect | reviewer-disagreement
@@ -54,7 +55,7 @@ Return valid JSON only:
   ],
   "strengths": ["specific evidence-backed strength"],
   "findings": [
-    {"finding_id":"F-1","severity":"Important","acceptance_ids":["..."],"classification":"implementation-defect","evidence":"file:line ...","invalidated_assumption":"...","correction":"...","counterexample":"...","contract_hash":"...","review_round":[REVIEW_ROUND]}
+    {"finding_id":"F-1","finding_ancestry":["F-1"],"severity":"Important","acceptance_ids":["..."],"classification":"implementation-defect","evidence":"file:line ...","invalidated_assumption":"...","correction":"...","counterexample":"...","contract_hash":"...","review_round":[REVIEW_ROUND]}
   ]
 }
 

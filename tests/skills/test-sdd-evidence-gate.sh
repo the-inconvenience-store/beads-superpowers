@@ -18,7 +18,7 @@ export PYTHONPYCACHEPREFIX="$TMP/pycache"
 python3 -m py_compile "$CHECKER"
 python3 "$CHECKER" check-task "$FIXTURES/pass.json" | tee "$TMP/pass-task.out"
 python3 "$CHECKER" check-epic "$FIXTURES/pass.json" | tee "$TMP/pass-epic.out"
-python3 "$CHECKER" check-dispatch "$FIXTURES/pass.json" | tee "$TMP/pass-dispatch.out"
+python3 "$CHECKER" check-dispatch "$FIXTURES/pass.json" --lineage "$FIXTURES/lineage-pass.json" | tee "$TMP/pass-dispatch.out"
 grep -Fq "PASS task: TASK-A, TASK-B" "$TMP/pass-task.out"
 grep -Fq "PASS epic: OUT-A" "$TMP/pass-epic.out"
 grep -Fq "PASS dispatch" "$TMP/pass-dispatch.out"
@@ -42,7 +42,12 @@ expect_failure check-epic substituted OUT-A "substituted evidence class"
 expect_failure check-task blocked TASK-A TASK-B BLOCKED UNTESTED
 expect_failure check-epic blocked OUT-A FAIL
 expect_failure check-task two-rounds "diagnostic required" amend-contract split-slice resolve-product-decision adjudicate-reviewer
-expect_failure check-dispatch two-rounds "dispatch disallowed" "two failed review rounds"
+if python3 "$CHECKER" check-dispatch "$FIXTURES/pass.json" --lineage "$FIXTURES/lineage-exhausted.json" >"$TMP/exhausted-lineage.out" 2>&1; then
+  echo "FAIL: replacement task reset an exhausted outcome lineage" >&2; exit 1
+fi
+grep -Fq "outcome lineage" "$TMP/exhausted-lineage.out"
+grep -Fq "task-replacement" "$TMP/exhausted-lineage.out"
+python3 "$CHECKER" check-dispatch "$FIXTURES/pass.json" --lineage "$FIXTURES/lineage-new-outcome.json" | grep -Fq "PASS dispatch"
 
 python3 - "$FIXTURES/two-rounds.json" "$TMP" <<'PY'
 import json, sys
@@ -84,7 +89,7 @@ fi
 grep -Fq "conflicting current results" "$TMP/contradictory.out"
 
 for text in MANIFEST_FILE REPORT_FILE BASE_SHA HEAD_SHA DOMAIN_CAPSULE "acceptance_matrix" \
-  finding_id severity acceptance_ids classification evidence invalidated_assumption correction counterexample contract_hash review_round \
+  finding_id finding_ancestry severity acceptance_ids classification evidence invalidated_assumption correction counterexample contract_hash review_round \
   "fresh reviewer"; do
   grep -Fqi "$text" "$TASK_PROMPT" || { echo "FAIL: task reviewer prompt missing $text" >&2; exit 1; }
 done
@@ -94,7 +99,7 @@ fi
 for text in "current commit" "contract hash" environment fixture "acceptance matrix" "fresh reviewer"; do
   grep -Fqi "$text" "$OUTCOME_PROMPT" || { echo "FAIL: outcome reviewer prompt missing $text" >&2; exit 1; }
 done
-for text in "two failed" amend-contract split-slice resolve-product-decision adjudicate-reviewer "fresh reviewer"; do
+for text in "outcome lineage" "two failed" amend-contract split-slice resolve-product-decision adjudicate-reviewer "fresh reviewer"; do
   grep -Fqi "$text" "$REFERENCE" || { echo "FAIL: review reference missing $text" >&2; exit 1; }
 done
 for text in "check-dispatch" focused task integration release prepare implement review correction merge release; do
