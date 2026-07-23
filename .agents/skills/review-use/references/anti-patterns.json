@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "patterns": [
+    {
+      "id": "RU-AP-001",
+      "title": "Recursive correction parenting",
+      "category": "task-topology",
+      "status": "active",
+      "description": "Correction history is encoded as progressively deeper product hierarchy instead of staying attached to a stable outcome.",
+      "detector": {"kind": "manual", "config": {}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-002",
+      "title": "Outcome-lineage retry reset",
+      "category": "review-convergence",
+      "status": "active",
+      "description": "A replacement task identity resets correction limits while pursuing the same unresolved outcome or finding ancestry.",
+      "detector": {"kind": "manual", "config": {}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-003",
+      "title": "Release verification in ordinary task work",
+      "category": "verification",
+      "status": "active",
+      "description": "An ordinary implementation or correction repeatedly runs broad release-grade checks it does not own.",
+      "detector": {"kind": "manual", "config": {}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-004",
+      "title": "Unreviewed dependency represented as reviewed",
+      "category": "dependency-truth",
+      "status": "active",
+      "description": "A worker consumes an unreviewed commit through reviewed-dependency authority instead of an explicit speculative contract.",
+      "detector": {"kind": "manual", "config": {}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-005",
+      "title": "Excessive controller polling",
+      "category": "orchestration",
+      "status": "active",
+      "description": "The controller repeatedly polls healthy workers instead of using completion signals and phase overrun thresholds.",
+      "detector": {"kind": "metric-threshold", "config": {"metric": "wait_events_per_session", "operator": ">", "value": 10}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-006",
+      "title": "Episodic memory capture",
+      "category": "memory",
+      "status": "active",
+      "description": "A procedural milestone with no future decision value is stored as durable memory.",
+      "detector": {"kind": "command-regex", "config": {"field": "command", "pattern": "(?i)bd\\s+remember\\b.*\\b(design|spec|plan)\\s+(accepted|approved)\\b"}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-007",
+      "title": "Editor opened for finished artifact",
+      "category": "user-experience",
+      "status": "active",
+      "description": "The workflow opens a completed product contract, spec, or plan in the user's editor without an explicit request.",
+      "detector": {"kind": "command-regex", "config": {"field": "command", "pattern": "(?i)(^|[;&|]\\s*|\\s)(open|code)\\s+[^\\n]*(docs/(plans|specs|product)|product-contract)"}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    },
+    {
+      "id": "RU-AP-008",
+      "title": "Long interval without stable slice closure",
+      "category": "throughput",
+      "status": "active",
+      "description": "Implementation and correction activity continues for a long interval without closing a stable planned slice or outcome.",
+      "detector": {"kind": "manual", "config": {}},
+      "added": {"review_id": "baseline-2026-07", "date": "2026-07-23"},
+      "retired": null
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "instances": [
+    {
+      "pattern_id": "RU-AP-001",
+      "platform": "codex",
+      "session_id": "codex-main",
+      "agent_id": null,
+      "timestamp": "2026-07-02T00:04:00Z",
+      "source_path": "/tmp/manual-evidence.jsonl",
+      "source_line": 12,
+      "confidence": "high",
+      "note": "Confirmed recursive correction parenting; token SECRET_MANUAL_SHOULD_NOT_LEAK"
+    }
+  ]
+}

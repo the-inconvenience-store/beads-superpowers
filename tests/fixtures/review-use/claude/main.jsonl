@@ -1,0 +1,2 @@
+{"type":"user","sessionId":"claude-main","timestamp":"2026-07-01T00:00:00Z","cwd":"/tmp/project","message":{"role":"user","content":"Review the workflow"}}
+{"type":"assistant","sessionId":"claude-main","timestamp":"2026-07-01T00:01:00Z","message":{"role":"assistant","content":[{"type":"tool_use","name":"Bash","input":{"command":"bd remember \"design plan accepted\""}},{"type":"text","text":"Stored token SECRET_SHOULD_NOT_LEAK"}]}}
