@@ -17,7 +17,7 @@ WORKFLOW_VERSION = "0.14.0"
 FIELDS = {
     "task_id", "contract_hash", "workflow_version", "graph_hash",
     "governing_artifacts", "outcome_ids", "base_commit",
-    "reviewed_dependency_commits", "worktree", "allowed_write_set",
+    "reviewed_dependency_commits", "speculative_dependency_commits", "worktree", "allowed_write_set",
     "generated_write_set", "write_scope_hash", "write_scope_amendments",
     "prohibited_paths", "allocated_resources", "verification_commands",
     "known_conflicts", "model_requested", "model_effective", "model_control",
@@ -25,7 +25,7 @@ FIELDS = {
 }
 CONTRACT_FIELDS = (
     "task_id", "workflow_version", "graph_hash", "governing_artifacts",
-    "outcome_ids", "base_commit", "reviewed_dependency_commits", "worktree",
+    "outcome_ids", "base_commit", "reviewed_dependency_commits", "speculative_dependency_commits", "worktree",
     "allowed_write_set", "generated_write_set", "write_scope_hash",
     "write_scope_amendments", "prohibited_paths", "allocated_resources",
     "verification_commands", "known_conflicts",
@@ -143,6 +143,31 @@ def validate(manifest: dict[str, Any]) -> None:
     dependencies = require_string_array(manifest, "reviewed_dependency_commits", nonempty=False)
     if any(not HEX40.fullmatch(item) for item in dependencies):
         raise ManifestError("reviewed_dependency_commits: expected full Git commit SHAs")
+    speculative = manifest["speculative_dependency_commits"]
+    speculative_fields = {"task_id", "commit", "frozen_interface", "disjoint_resources", "discard_files", "rebase_commits"}
+    if not isinstance(speculative, list):
+        raise ManifestError("speculative_dependency_commits: expected array")
+    speculative_commits: set[str] = set()
+    speculative_tasks: set[str] = set()
+    for index, record in enumerate(speculative):
+        if not isinstance(record, dict) or set(record) != speculative_fields:
+            raise ManifestError(f"speculative_dependency_commits[{index}]: invalid proof record")
+        if not isinstance(record["task_id"], str) or not record["task_id"] or record["task_id"] in speculative_tasks:
+            raise ManifestError("speculative_dependency_commits: unique task_id required")
+        if not isinstance(record["commit"], str) or not HEX40.fullmatch(record["commit"]):
+            raise ManifestError(f"speculative_dependency_commits[{index}].commit: expected full Git SHA")
+        if not isinstance(record["frozen_interface"], str) or not record["frozen_interface"]:
+            raise ManifestError(f"speculative_dependency_commits[{index}].frozen_interface: required")
+        if record["disjoint_resources"] is not True:
+            raise ManifestError(f"speculative_dependency_commits[{index}].disjoint_resources: must be true")
+        for field in ("discard_files", "rebase_commits"):
+            value = record[field]
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ManifestError(f"speculative_dependency_commits[{index}].{field}: expected non-negative integer")
+        speculative_tasks.add(record["task_id"]); speculative_commits.add(record["commit"])
+    overlap = set(dependencies) & speculative_commits
+    if overlap:
+        raise ManifestError("reviewed and speculative dependency commits must be disjoint")
     safe_repo_path(manifest["worktree"], "worktree", absolute=True)
     allowed = require_string_array(manifest, "allowed_write_set", nonempty=True)
     generated = require_string_array(manifest, "generated_write_set", nonempty=True)
@@ -367,6 +392,7 @@ def prepare(args: argparse.Namespace) -> dict[str, Any]:
         "outcome_ids": outcomes,
         "base_commit": args.base_commit,
         "reviewed_dependency_commits": args.reviewed_dependency,
+        "speculative_dependency_commits": [],
         "worktree": args.worktree,
         "allowed_write_set": task_paths(body.get("Files", "")),
         "generated_write_set": [report_path],

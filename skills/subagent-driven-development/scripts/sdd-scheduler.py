@@ -27,6 +27,7 @@ TASK_FIELDS = {
     "current_contract_hash", "write_set", "exclusive_resources",
     "capacity_resources", "phase", "review_result", "speculation", "commit",
 }
+OPTIONAL_TASK_FIELDS = {"speculative_dependency_commits"}
 SPECULATION_FIELDS = {
     "enabled", "frozen_interface", "disjoint_resources",
     "discard_files", "rebase_commits",
@@ -120,8 +121,9 @@ def validate_state(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
     for index, task in enumerate(tasks):
         prefix = f"tasks[{index}]"
-        if not isinstance(task, dict) or set(task) != TASK_FIELDS:
+        if not isinstance(task, dict) or frozenset(task) not in {frozenset(TASK_FIELDS), frozenset(TASK_FIELDS | OPTIONAL_TASK_FIELDS)}:
             raise SchedulerError(f"{prefix}: fields differ")
+        task.setdefault("speculative_dependency_commits", {})
         task_id = task["id"]
         if not isinstance(task_id, str) or not task_id or task_id in by_id:
             raise SchedulerError(f"{prefix}.id: expected unique non-empty identity")
@@ -140,6 +142,16 @@ def validate_state(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
             raise SchedulerError(f"{task_id}.dependency_commits: invalid commit map")
         if not set(commits).issubset(dependencies):
             raise SchedulerError(f"{task_id}.dependency_commits: key is not a dependency")
+        speculative_commits = task["speculative_dependency_commits"]
+        if not isinstance(speculative_commits, dict) or any(
+            not isinstance(dep, str) or not isinstance(commit, str) or not HEX40.fullmatch(commit)
+            for dep, commit in speculative_commits.items()
+        ):
+            raise SchedulerError(f"{task_id}.speculative_dependency_commits: invalid commit map")
+        if not set(speculative_commits).issubset(dependencies):
+            raise SchedulerError(f"{task_id}.speculative_dependency_commits: key is not a dependency")
+        if set(commits) & set(speculative_commits) or set(commits.values()) & set(speculative_commits.values()):
+            raise SchedulerError(f"{task_id}: reviewed and speculative dependency commits must be disjoint")
         for field in ("contract_hash", "current_contract_hash"):
             value = task[field]
             if not isinstance(value, str) or not HEX64.fullmatch(value):
@@ -236,6 +248,10 @@ def speculation_decision(
         reasons.append("interface is not frozen")
     if not speculation["disjoint_resources"]:
         reasons.append("resources are not declared disjoint")
+    for dependency in unresolved:
+        recorded = task["speculative_dependency_commits"].get(dependency["id"])
+        if dependency["commit"] is None or recorded != dependency["commit"]:
+            reasons.append(f"speculative dependency commit for {dependency['id']} is stale or absent")
     for dependency in unresolved:
         if any(
             path_overlap(left, right)
@@ -358,7 +374,13 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
             task_reasons[task_id].append("stale contract: current contract hash differs")
             continue
         if task["phase"] == "reviewed" and task["review_result"] == "pass":
-            merge_candidates.append(task)
+            if task["speculative_dependency_commits"]:
+                blocked.add(task_id)
+                task_reasons[task_id].append(
+                    "speculative dependencies must pass review and be rebound as reviewed dependencies before merge"
+                )
+            else:
+                merge_candidates.append(task)
         elif task["phase"] == "reviewed":
             blocked.add(task_id)
             task_reasons[task_id].append(f"review result {task['review_result']} blocks merge")
@@ -375,6 +397,7 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
     merges: list[str] = []
     reviews: list[str] = []
     dispatch: list[str] = []
+    dispatch_modes: dict[str, str] = {}
     serial_busy = mode == "serial" and any(
         task["phase"] in {"implementing", "reviewing", "merging"} for task in tasks
     )
@@ -428,6 +451,7 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
             task_reasons[task_id].extend(reasons)
             continue
         dispatch.append(task_id)
+        dispatch_modes[task_id] = "speculative" if speculative else "normal"
         worker_slots -= 1
         held.append(task)
         task_reasons[task_id].extend(readiness_reasons)
@@ -445,6 +469,7 @@ def decide(state: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "dispatch": dispatch,
+        "dispatch_modes": dispatch_modes,
         "reviews": reviews,
         "merges": merges,
         "blocked": sorted(blocked),

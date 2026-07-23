@@ -22,6 +22,7 @@ Required fields:
 | `outcome_ids` | Non-empty outcomes owned by the slice |
 | `base_commit` | Full Git SHA at dispatch |
 | `reviewed_dependency_commits` | Full SHAs already reviewed and safe to consume |
+| `speculative_dependency_commits` | Unreviewed task/commit identities plus frozen-interface, disjoint-resource, and bounded-cost proof |
 | `worktree` | Absolute task worktree |
 | `allowed_write_set` | Non-empty repo-relative write boundary |
 | `generated_write_set` | Generated/report paths below `.internal/sdd/`, separate from product/source authority |
@@ -35,7 +36,7 @@ Required fields:
 | `capability_tier`, `context_mode` | Isolation truth |
 | `report_path` | Per-worktree path below `.internal/sdd/` |
 
-The canonical contract hash covers task, workflow, graph, governing artifacts, outcomes, base/dependency commits, worktree, both write boundaries and their hash/amendments, resources, verification, and conflicts. Runtime model/capability observations and report location do not change implementation authority.
+The canonical contract hash covers task, workflow, graph, governing artifacts, outcomes, reviewed and speculative dependency commits, base, worktree, both write boundaries and their hash/amendments, resources, verification, and conflicts. Reviewed and speculative commit sets are disjoint; an unreviewed commit is never relabeled to make dispatch convenient. Runtime model/capability observations and report location do not change implementation authority.
 
 `known_conflicts` entries contain `field`, `evidence`, `affected_choices`, `decision_owner`, and `status`. Only `resolved` may dispatch. Unresolved authority produces `NEEDS_CONTEXT`.
 

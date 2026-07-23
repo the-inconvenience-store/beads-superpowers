@@ -7,7 +7,7 @@ Load this reference when a validated task graph has more than one unfinished tas
 Create a state snapshot containing the graph revision, capability tier, worker/review/merge capacity, named capacity resources, acceptance-gate state, speculation limits, and current tasks. Each task records:
 
 - status and phase;
-- dependencies plus the exact reviewed dependency commits it consumes;
+- dependencies plus disjoint maps of exact reviewed commits and explicit speculative input commits;
 - manifest contract hash and current contract hash;
 - write set, exclusive resources, and capacity-resource demand;
 - review result and implementation commit;
@@ -57,6 +57,8 @@ Safe speculation is exceptional and explicit. It requires all of:
 - declared and computed disjoint write, exclusive, and capacity resources;
 - discard-file and rebase-commit cost within configured bounds;
 - available worker capacity.
+
+The scheduler reports `dispatch_modes` for every selected task. A speculative task remains in that mode until each input commit passes review and is rebound as a reviewed dependency in a fresh manifest; it cannot merge while the commit is still speculative. Never place the same task or commit in both reviewed and speculative maps.
 
 If any proof is absent, the scheduler reports why speculation is denied. A merged dependency with a stale or missing commit record is a context error, not a speculation opportunity.
 

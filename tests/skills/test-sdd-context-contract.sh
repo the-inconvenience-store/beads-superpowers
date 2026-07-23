@@ -25,6 +25,7 @@ manifest["verification_commands"] = [
     {"tier":"task", "command":"bash tests/skills/test-sdd-context-contract.sh"}
 ]
 manifest["generated_write_set"] = [manifest["report_path"]]
+manifest["speculative_dependency_commits"] = []
 manifest["write_scope_amendments"] = []
 scope = {
     "allowed_write_set": sorted(manifest["allowed_write_set"]),
@@ -35,7 +36,7 @@ manifest["write_scope_hash"] = hashlib.sha256(
 ).hexdigest()
 contract_fields = (
     "task_id", "workflow_version", "graph_hash", "governing_artifacts",
-    "outcome_ids", "base_commit", "reviewed_dependency_commits", "worktree",
+    "outcome_ids", "base_commit", "reviewed_dependency_commits", "speculative_dependency_commits", "worktree",
     "allowed_write_set", "generated_write_set", "write_scope_hash",
     "write_scope_amendments", "prohibited_paths", "allocated_resources",
     "verification_commands", "known_conflicts",
@@ -58,6 +59,10 @@ conflicting_authority["governing_artifacts"].append({
 invalid_tier = json.loads(json.dumps(manifest))
 invalid_tier["verification_commands"] = [{"tier":"broad", "command":"bash tests/all.sh"}]
 (target.parent / "invalid-tier.json").write_text(json.dumps(invalid_tier))
+false_reviewed = json.loads(json.dumps(manifest))
+false_reviewed["speculative_dependency_commits"] = [{"task_id":"dep-a","commit":"2"*40,"frozen_interface":"API-A","disjoint_resources":True,"discard_files":1,"rebase_commits":1}]
+false_reviewed["reviewed_dependency_commits"] = ["2"*40]
+(target.parent / "false-reviewed.json").write_text(json.dumps(false_reviewed))
 PY
 
 python3 -m py_compile "$VALIDATOR"
@@ -89,6 +94,8 @@ expect_failure conflicting-authority governing_artifacts \
   python3 "$VALIDATOR" validate "$TMP/conflicting-authority.json"
 expect_failure invalid-tier verification_commands \
   python3 "$VALIDATOR" validate "$TMP/invalid-tier.json"
+expect_failure false-reviewed "reviewed and speculative" \
+  python3 "$VALIDATOR" validate "$TMP/false-reviewed.json"
 
 python3 - "$VALID" "$TMP" <<'PY'
 import json
@@ -195,6 +202,7 @@ assert len(manifest["write_scope_hash"]) == 64
 assert manifest["write_scope_amendments"] == []
 assert manifest["allocated_resources"]["exclusive"] == ["approval command contract"]
 assert manifest["verification_commands"] == [{"tier":"focused","command":"pytest tests/test_approval.py"}]
+assert manifest["speculative_dependency_commits"] == []
 PY
 
 mkdir -p "$TMP/repo/src" "$TMP/repo/tests"

@@ -83,10 +83,49 @@ import json, sys
 from pathlib import Path
 safe=json.loads(Path(sys.argv[1]).read_text())
 unsafe=json.loads(Path(sys.argv[2]).read_text())
-assert safe["dispatch"] == ["dependent"]
-assert "safe speculation" in " ".join(safe["reasons"]["tasks"]["dependent"])
+assert safe["dispatch"] == []
+assert "speculative dependency commit" in " ".join(safe["reasons"]["tasks"]["dependent"])
 assert unsafe["dispatch"] == [] and unsafe["blocked"] == ["dependent"]
 assert "speculation" in " ".join(unsafe["reasons"]["tasks"]["dependent"])
+PY
+
+python3 - "$FIXTURES/speculative-safe.json" "$TMP" <<'PY'
+import json, sys
+from pathlib import Path
+source=json.loads(Path(sys.argv[1]).read_text())
+for task in source["tasks"]: task["speculative_dependency_commits"]={}
+dependent=next(task for task in source["tasks"] if task["id"]=="dependent")
+prerequisite=next(task for task in source["tasks"] if task["id"]=="base")
+prerequisite["phase"]="implemented"; prerequisite["commit"]="1"*40
+dependent["speculative_dependency_commits"]={"base":prerequisite["commit"]}
+Path(sys.argv[2],"truthful-speculation.json").write_text(json.dumps(source))
+false=json.loads(json.dumps(source))
+dependent=next(task for task in false["tasks"] if task["id"]=="dependent")
+dependent["dependency_commits"]={"base":dependent["speculative_dependency_commits"]["base"]}
+Path(sys.argv[2],"false-reviewed-speculation.json").write_text(json.dumps(false))
+merge=json.loads(json.dumps(source))
+dependent=next(task for task in merge["tasks"] if task["id"]=="dependent")
+dependent.update(phase="reviewed",review_result="pass",commit="2"*40)
+Path(sys.argv[2],"speculative-merge.json").write_text(json.dumps(merge))
+PY
+decide "$TMP/truthful-speculation.json" "$TMP/truthful-speculation-out.json"
+python3 - "$TMP/truthful-speculation-out.json" <<'PY'
+import json, sys
+from pathlib import Path
+d=json.loads(Path(sys.argv[1]).read_text())
+assert d["dispatch"] == ["dependent"] and d["dispatch_modes"] == {"dependent":"speculative"}
+PY
+if decide "$TMP/false-reviewed-speculation.json" "$TMP/false-reviewed-out.json" 2>"$TMP/false-reviewed.err"; then
+  echo "FAIL: one commit was labeled both reviewed and speculative" >&2; exit 1
+fi
+grep -Fq "reviewed and speculative" "$TMP/false-reviewed.err"
+decide "$TMP/speculative-merge.json" "$TMP/speculative-merge-out.json"
+python3 - "$TMP/speculative-merge-out.json" <<'PY'
+import json, sys
+from pathlib import Path
+d=json.loads(Path(sys.argv[1]).read_text())
+assert d["merges"] == [] and "dependent" in d["blocked"]
+assert "rebound" in " ".join(d["reasons"]["tasks"]["dependent"])
 PY
 
 decide "$FIXTURES/host-limited.json" "$TMP/host.json"

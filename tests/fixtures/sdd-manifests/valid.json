@@ -15,6 +15,7 @@
   ],
   "base_commit": "1111111111111111111111111111111111111111",
   "reviewed_dependency_commits": ["2222222222222222222222222222222222222222"],
+  "speculative_dependency_commits": [],
   "worktree": "/tmp/superbeads-task-d3g",
   "allowed_write_set": ["skills/subagent-driven-development/SKILL.md", "tests/skills/test-sdd-context-contract.sh"],
   "generated_write_set": [".internal/sdd/task-d3g-report.md"],
