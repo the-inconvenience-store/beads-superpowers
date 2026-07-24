@@ -13,7 +13,7 @@ echo ""
 # Test 1: Verify skill can be loaded
 echo "Test 1: Skill loading..."
 
-output=$(run_claude "Describe the current subagent-driven-development skill concisely. Cover: its validated-graph and Context Manifest prerequisites; whether one task reviewer returns both spec-compliance and code-quality verdicts; the CONTRACT_READY/NEEDS_CONTEXT pre-edit handshake; how often the controller reads the graph; how the reviewer treats implementer claims and inspects the diff; what happens after the first and second failed review rounds and whether a third ordinary correction is allowed; task handoff through the task bead and bounded report/review files; required worktree/planning skills; and whether implementation may begin on main without explicit consent." 180)
+output=$(run_claude "Describe the current subagent-driven-development skill concisely. Cover: its validated-graph and Context Manifest prerequisites; whether one task reviewer returns both spec-compliance and code-quality verdicts; the CONTRACT_READY/NEEDS_CONTEXT pre-edit handshake; how often the controller reads the graph; how the reviewer treats implementer claims and inspects the diff; what happens after the first and second failed review rounds and whether a third ordinary correction is allowed; task handoff through the task bead and bounded report/review files; required worktree/planning skills; whether implementation may begin on main without explicit consent; and the default versus codex execution modes, including exact codex activation, progressive disclosure, Beads worktrees/artifacts, and recursive-agent prevention." 180)
 
 if assert_contains "$output" "subagent-driven-development\|Subagent-Driven Development\|Subagent Driven" "Skill is recognized"; then
     : # pass
@@ -92,7 +92,7 @@ echo "Test 5: Task reviewer mindset..."
 
 # Accept the range of vocabulary the model uses for an adversarial stance
 # ("skeptic" matches skeptical/skepticism; assert_contains is case-insensitive).
-if assert_contains "$output" "skeptic\|distrust\|not trust\|don't trust\|unverified\|adversarial\|verify.*independently\|suspicious" "Reviewer is skeptical"; then
+if assert_contains "$output" "skeptic\|distrust\|not trust\|don't trust\|rather than trust\|unverified\|adversarial\|verify.*independently\|suspicious" "Reviewer is skeptical"; then
     : # pass
 else
     exit 1
@@ -164,6 +164,36 @@ echo "Test 9: Main branch red flag..."
 
 if assert_contains "$output" "worktree\|feature.*branch\|not.*main\|never.*main\|avoid.*main\|don't.*main\|consent\|permission" "Warns against main branch"; then
     : # pass
+else
+    exit 1
+fi
+
+echo ""
+
+echo "Test 10: Claude-only Codex mode..."
+
+if assert_contains "$output" "default.*not explicitly\|not explicitly.*default\|default mode" "Default mode is the fallback"; then
+    :
+else
+    exit 1
+fi
+if assert_contains "$output" "Claude Code.*explicit\|explicit.*Claude Code" "Codex mode requires explicit Claude Code invocation"; then
+    :
+else
+    exit 1
+fi
+if assert_contains "$output" "codex-mode.md\|progressive\|reference" "Codex details are progressively disclosed"; then
+    :
+else
+    exit 1
+fi
+if assert_contains "$output" "bd worktree\|Beads.*worktree" "Controller uses Beads-aware worktrees"; then
+    :
+else
+    exit 1
+fi
+if assert_contains "$output" "disable multi_agent\|leaf worker\|must not spawn\|no.*recursive" "Codex workers cannot recurse"; then
+    :
 else
     exit 1
 fi

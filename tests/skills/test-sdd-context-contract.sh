@@ -6,6 +6,7 @@ VALIDATOR="$ROOT/skills/subagent-driven-development/scripts/sdd-manifest.py"
 FIXTURES="$ROOT/tests/fixtures/sdd-manifests"
 SKILL="$ROOT/skills/subagent-driven-development/SKILL.md"
 PROMPT="$ROOT/skills/subagent-driven-development/implementer-prompt.md"
+CODEX_REFERENCE="$ROOT/skills/subagent-driven-development/references/codex-mode.md"
 RUNNER="$ROOT/scripts/skill-microtest.py"
 SCENARIO="$ROOT/tests/skill-microtests/scenarios/sdd-context-preflight.json"
 TMP="$(mktemp -d)"
@@ -257,6 +258,45 @@ for reference in context-lifecycle scheduling review-evidence; do
     echo "FAIL: missing SDD reference $reference.md" >&2; exit 1;
   }
 done
+
+test -f "$CODEX_REFERENCE" || {
+  echo "FAIL: missing SDD Codex-mode reference" >&2
+  exit 1
+}
+for text in "default mode" "codex mode" "Claude Code" "explicitly" "unavailable" \
+  "[references/codex-mode.md](references/codex-mode.md)"; do
+  grep -Fqi "$text" "$SKILL" || {
+    echo "FAIL: SDD mode routing missing $text" >&2
+    exit 1
+  }
+done
+if grep -Fq 'codex exec' "$SKILL"; then
+  echo "FAIL: Codex branch leaked into the SDD common path" >&2
+  exit 1
+fi
+for text in "codex exec" "--disable multi_agent" "must not spawn" \
+  "bd worktree create" "bd worktree remove" ".internal/sdd/" \
+  "Context Manifest" "controller owns Beads" "read-only" \
+  "implementer-prompt.md" "last-message.md" "absolute" "worker transport" \
+  "low | medium | high | xhigh | max" "single hardest" "task reviewers" \
+  "transport artifacts" "not authoritative"; do
+  grep -Fqi -- "$text" "$CODEX_REFERENCE" || {
+    echo "FAIL: SDD Codex mode missing $text" >&2
+    exit 1
+  }
+done
+if grep -Eq -- '--output-schema|additionalProperties' "$CODEX_REFERENCE"; then
+  echo "FAIL: unused structured-output schema guidance entered Codex mode" >&2
+  exit 1
+fi
+if grep -Fq 'launch.json' "$CODEX_REFERENCE"; then
+  echo "FAIL: Codex transport duplicates manifest-owned launch state" >&2
+  exit 1
+fi
+if grep -Eq '(^|[^a-z])git worktree (add|remove)' "$CODEX_REFERENCE"; then
+  echo "FAIL: SDD Codex mode uses raw git worktree lifecycle commands" >&2
+  exit 1
+fi
 
 for text in CONTRACT_READY NEEDS_CONTEXT contract_hash outcome_ids allowed_write_set prohibited_paths "verification tiers" \
   "controller owns Beads" "task-specific skills" "scope and security" "DONE_WITH_CONCERNS"; do

@@ -36,6 +36,10 @@ python3 "$PWD/skills/subagent-driven-development/scripts/sdd-manifest.py" valida
 
 The schema, hash boundary, platform truth table, and handshake are in [references/context-lifecycle.md](references/context-lifecycle.md). Validation failure stops dispatch.
 
+## Execution Modes
+
+The **default mode** is the execution spine below and applies whenever `codex` mode was not explicitly requested. **Codex mode** is available only when the controller is running in a Claude Code session and the user explicitly invokes this skill in `codex` mode; it keeps the same manifests, Beads ownership, worktrees, reviews, and acceptance gates but runs leaf workers through Codex CLI processes. When that condition is met, read [references/codex-mode.md](references/codex-mode.md) before dispatch. An explicit `codex` request on another host is unavailable and must be reported rather than silently replaced with default mode.
+
 ## Execution Spine
 
 For each ready task:
