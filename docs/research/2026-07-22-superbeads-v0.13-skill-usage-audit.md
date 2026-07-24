@@ -226,29 +226,6 @@ Reject or reroute candidates whose core claim is:
 
 Keep only one latest continuation per active stream, with a short expiry. Durable memories should name evidence and the event that invalidates them. The report or governing artifact remains the full explanation; memory is a retrieval index and decision delta.
 
-### Dry-run curation proposal
-
-No operation below was applied. Memory-curator requires explicit approval before mutation.
-
-#### Juno
-
-1. Keep `continuation-2026-07-22-webui-users-remote`; soft-tombstone the overlapping `resume-webui-users-remote-2026-07-22`.
-2. Move the durable part of the three Beads checkout/rebase/hook notes into the owning project instruction or skill, then soft-tombstone the procedural memories.
-3. Consolidate the two `design-internal-cli-model-command…` entries into one evidence-backed semantic design memory.
-4. Forget `design-events-layer-plan-approved-for-subagent-driven` after confirming its graph remains canonical.
-5. Forget `docs-juno-tui-interface-documentation-lives-in-docs`; it is a directly searchable document pointer.
-6. Replace or forget `lesson-run-juno-ci-style-go-gates-sequentially`; preserve only a concise gate invariant in the owning instruction if one is not already present.
-7. Do not mass-assign headers. Validate evidence first, then type only retained durable memories.
-
-#### Seraphim
-
-1. Forget or tombstone `design-approved-cos-m3-spec-6-studio-authoring`.
-2. Forget `planning-insight-cos-spec-4-plan-epic-seraphim` and `gotcha-bd-create-graph-dry-run-is-not` once ownership by writing-plans is confirmed.
-3. Forget the superseded `execution-note-during-m3-spec-2-parallel-worktree`.
-4. Forget or tombstone stale `gotcha-spec-5-feat-m3-authoring-05-was`.
-5. Consolidate `lesson-deploying-a-web-app…` and `studio-live-deployment…` into one evidence-backed semantic pattern.
-6. Add typed headers to the remaining 24 headerless entries only when their bodies identify durable evidence and an invalidator.
-
 ### Workflow changes
 
 1. Put the tightened capture test directly in the memory-capture path, not only in periodic curation.
